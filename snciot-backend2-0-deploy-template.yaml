@@ -1,0 +1,231 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: snciot-backend2-0-deploy-template
+  namespace: argo-cicd
+spec:
+  securityContext:
+    runAsNonRoot: false
+  serviceAccountName: argo-workflow
+  volumes:
+    - name: shared-workspace
+      persistentVolumeClaim:
+        claimName: shared-data-pvc-2
+    - name: credentials
+      secret:
+        secretName: deployment-ssh-keys
+  templates:
+    - name: snciot-backend2-0-deploy
+      inputs:
+        parameters:
+          - name: target-branch
+          - name: project-name
+          - name: git-commit
+          - name: commit-message
+          - name: build-time
+          - name: git-url
+      volumes:
+        - name: shared-workspace
+          persistentVolumeClaim:
+            claimName: shared-data-pvc-2
+        - name: credentials
+          secret:
+            secretName: deployment-ssh-keys
+      container:
+        image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/linuxserver/openssh-server:version-9.7_p1-r4
+        imagePullPolicy: IfNotPresent
+        workingDir: /src
+        volumeMounts:
+          - name: shared-workspace
+            mountPath: /src
+          - name: credentials
+            mountPath: /credentials
+        env:
+          - name: LC_ALL
+            value: C
+          - name: LANG
+            value: C
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -e
+
+            TARGET_BRANCH="{{inputs.parameters.target-branch}}"
+            PROJECT_NAME="{{inputs.parameters.project-name}}"
+            GIT_COMMIT="{{inputs.parameters.git-commit}}"
+            COMMIT_MESSAGE="{{inputs.parameters.commit-message}}"
+            BUILD_TIME="{{inputs.parameters.build-time}}"
+            GIT_URL="{{inputs.parameters.git-url}}"
+
+            # Extract branch name from full ref if needed
+            case "$TARGET_BRANCH" in
+              refs/heads/*)
+                BRANCH_NAME="${TARGET_BRANCH#refs/heads/}"
+                echo "Debug: Extracted branch name from full ref: $BRANCH_NAME"
+                ;;
+              *)
+                BRANCH_NAME="$TARGET_BRANCH"
+                echo "Debug: Using branch name as is: $BRANCH_NAME"
+                ;;
+            esac
+
+            echo "Debug: TARGET_BRANCH=$TARGET_BRANCH"
+            echo "Debug: BRANCH_NAME=$BRANCH_NAME"
+            echo "Debug: PROJECT_NAME=$PROJECT_NAME"
+            echo "Debug: GIT_COMMIT=$GIT_COMMIT"
+            echo "Debug: BUILD_TIME=$BUILD_TIME"
+            echo "Debug: GIT_URL=$GIT_URL"
+
+            # Set deployment configuration based on branch
+            case "$BRANCH_NAME" in
+              "master")
+                HOST="192.168.30.111"
+                REMOTE_BASE_PATH="/usr/local/www/web/"
+                PORT="22"
+                KEY_FILE="dev-ssh-key"
+                ;;
+              "main")
+                HOST="192.168.0.210"
+                REMOTE_BASE_PATH="/usr/local/www/web/"
+                PORT="22"
+                KEY_FILE="main-ssh-key"
+                ;;
+              "release")
+                HOST="20.77.170.190"
+                REMOTE_BASE_PATH="/usr/local/www/web/"
+                PORT="1022"
+                KEY_FILE="release-ssh-key"
+                ;;
+              *)
+                echo "Error: No deployment configuration for branch $BRANCH_NAME"
+                exit 1
+                ;;
+            esac
+
+            echo "Debug: Selected HOST=$HOST"
+            echo "Debug: Selected PORT=$PORT"
+            echo "Debug: Selected KEY_FILE=$KEY_FILE"
+
+            # Check if branch-specific key file exists, otherwise use default
+            if [ -n "$KEY_FILE" ] && [ -f "/credentials/$KEY_FILE" ]; then
+              FINAL_KEY_FILE="$KEY_FILE"
+              echo "Debug: Using branch-specific key file: $FINAL_KEY_FILE"
+            elif [ -f "/credentials/privatekey" ]; then
+              FINAL_KEY_FILE="privatekey"
+              echo "Debug: Using default key file: $FINAL_KEY_FILE"
+            else
+              echo "Error: No SSH key file found"
+              echo "Debug: Available files in credentials workspace:"
+              ls -la "/credentials/"
+              exit 1
+            fi
+
+            # Fix SSH key permissions by copying to a temporary file
+            cp "/credentials/$FINAL_KEY_FILE" /tmp/temp_key
+            chmod 600 /tmp/temp_key
+
+            # Check if hbe_backend folder exists
+            if [ ! -d "hbe_backend" ]; then
+              echo "Error: hbe_backend folder does not exist"
+              ls -la
+              exit 1
+            fi
+
+            echo "Deploying hbe_backend to $HOST:$REMOTE_BASE_PATH"
+
+            # Get file size and hash for meta log
+            FILE_SIZE=$(du -sh hbe_backend | cut -f1)
+            FILE_HASH=$(find hbe_backend -type f -exec sha256sum {} \; | sha256sum | cut -d' ' -f1)
+
+            # Compress local build artifacts and transfer to remote server
+            echo "Compressing hbe_backend folder..."
+            tar -czf hbe_backend.tar.gz hbe_backend
+
+            # Transfer compressed package to remote server
+            echo "Transferring compressed package to remote server..."
+            scp -i /tmp/temp_key -P $PORT -o StrictHostKeyChecking=no hbe_backend.tar.gz root@$HOST:$REMOTE_BASE_PATH
+
+            # Execute all operations on remote server: backup, extract, rename, cleanup
+            echo "Executing remote deployment operations..."
+            ssh -o StrictHostKeyChecking=no -i /tmp/temp_key root@$HOST -p $PORT "
+              DEPLOY_PATH=\"$REMOTE_BASE_PATH\"
+              FOLDER_PATH=\"\$DEPLOY_PATH/hbe_backend\"
+              
+              # Backup old version folder
+              echo \"Backing up old version folder...\"
+              if [ -d \"\$FOLDER_PATH\" ]; then
+                TIMESTAMP=\$(date +%Y%m%d%H%M%S)
+                BACKUP_FOLDER=\"\$DEPLOY_PATH/hbe_backend_\$TIMESTAMP\"
+                mv \"\$FOLDER_PATH\" \"\$BACKUP_FOLDER\"
+                echo \"Backed up old folder to: \$BACKUP_FOLDER\"
+              else
+                echo \"No old version folder found\"
+              fi
+              
+              # Extract new version
+              cd $REMOTE_BASE_PATH
+              tar -xzf hbe_backend.tar.gz
+              rm -f hbe_backend.tar.gz
+              echo \"Deployment completed\"
+              
+              # Check if backup folder count exceeds 4, delete the oldest if so
+              BACKUP_COUNT=\$(ls -d \$DEPLOY_PATH/hbe_backend_* 2>/dev/null | wc -l)
+              if [ \$BACKUP_COUNT -gt 4 ]; then
+                OLDEST_FOLDER=\$(ls -td \$DEPLOY_PATH/hbe_backend_* | tail -1)
+                rm -rf \"\$OLDEST_FOLDER\"
+                echo \"Deleted oldest backup folder: \$OLDEST_FOLDER\"
+              fi
+            "
+
+            # Create or update meta file
+            echo "Creating meta log file..."
+            BUILD_TIME_FORMATTED=$(echo "$BUILD_TIME" | sed 's/T/ /g' | sed 's/+/_/g')
+            VERSION_NUMBER="${PROJECT_NAME}_${BRANCH_NAME}_${BUILD_TIME_FORMATTED}"
+            ESCAPED_COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | sed 's/"/\\"/g')
+
+            # Create meta content
+            echo "# 构建元数据信息" > /tmp/meta_content.txt
+            echo "软件版本号: $VERSION_NUMBER" >> /tmp/meta_content.txt
+            echo "发布日期和时间: $BUILD_TIME_FORMATTED" >> /tmp/meta_content.txt
+            echo "归属的项目: $PROJECT_NAME" >> /tmp/meta_content.txt
+            echo "代码仓库: $GIT_URL" >> /tmp/meta_content.txt
+            echo "分支: $BRANCH_NAME" >> /tmp/meta_content.txt
+            echo "对应 revision: $GIT_COMMIT" >> /tmp/meta_content.txt
+            echo "压缩包大小: $FILE_SIZE" >> /tmp/meta_content.txt
+            echo "压缩包 hash(sha256): $FILE_HASH" >> /tmp/meta_content.txt
+            echo "主要修改描述: $ESCAPED_COMMIT_MESSAGE" >> /tmp/meta_content.txt
+            echo "" >> /tmp/meta_content.txt
+            echo "构建时间: $BUILD_TIME_FORMATTED" >> /tmp/meta_content.txt
+            echo "构建状态: SUCCESS" >> /tmp/meta_content.txt
+
+            # Transfer metadata file to remote server (append to existing meta.log)
+            echo "Appending meta log to remote server meta.log..."
+            scp -i /tmp/temp_key -P $PORT -o StrictHostKeyChecking=no /tmp/meta_content.txt root@$HOST:/tmp/meta_content.txt
+            ssh -o StrictHostKeyChecking=no -i /tmp/temp_key root@$HOST -p $PORT "
+              if [ ! -f $REMOTE_BASE_PATH/meta.log ]; then
+                touch $REMOTE_BASE_PATH/meta.log
+              fi
+              echo '' >> $REMOTE_BASE_PATH/meta.log
+              echo '========== New Deployment ==========' >> $REMOTE_BASE_PATH/meta.log
+              cat /tmp/meta_content.txt >> $REMOTE_BASE_PATH/meta.log
+              echo '========== End of Deployment ==========' >> $REMOTE_BASE_PATH/meta.log
+              rm -f /tmp/meta_content.txt
+            "
+
+            # Verify the meta file was transferred
+            echo "Verifying meta file on remote server:"
+            ssh -o StrictHostKeyChecking=no -i /tmp/temp_key root@$HOST -p $PORT "
+              if [ -f $REMOTE_BASE_PATH/meta.log ]; then
+                echo 'Meta file exists on remote server:'
+                tail -n 20 $REMOTE_BASE_PATH/meta.log
+              else
+                echo 'Error: Meta file was not found on remote server'
+              fi
+            "
+
+            # Clean up temporary files
+            rm -f /tmp/temp_key /tmp/meta_content.txt hbe_backend.tar.gz
+
+            echo "Frontend application deployed successfully"
+
+            echo "All apps deployed successfully"

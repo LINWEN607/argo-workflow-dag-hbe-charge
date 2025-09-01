@@ -1,0 +1,111 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: snciot-backend2-0-pull-template
+  namespace: argo-cicd
+spec:
+  securityContext:
+    runAsNonRoot: false
+  serviceAccountName: argo-workflow
+  volumes:
+    - name: shared-workspace
+      persistentVolumeClaim:
+        claimName: shared-data-pvc-2
+    - name: credentials
+      secret:
+        secretName: deployment-ssh-keys
+  templates:
+    - name: snciot-backend2-0-pull
+      inputs:
+        parameters:
+          - name: branch
+          - name: url
+      volumes:
+        - name: shared-workspace
+          persistentVolumeClaim:
+            claimName: shared-data-pvc-2
+      container:
+        image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/alpine/git:v2.49.0
+        imagePullPolicy: IfNotPresent
+        workingDir: /src
+        volumeMounts:
+          - name: shared-workspace
+            mountPath: /src
+        env:
+          - name: GIT_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: gitlab-pull-secret
+                key: username
+          - name: GIT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: gitlab-pull-secret
+                key: password
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -e
+
+            echo "Debug: Starting pull task"
+            echo "Raw branch parameter: {{inputs.parameters.branch}}"
+            echo "URL parameter: {{inputs.parameters.url}}"
+
+            # Extract branch name from full ref if needed
+            BRANCH_NAME=$(echo "{{inputs.parameters.branch}}" | sed 's|refs/heads/||')
+            echo "Debug: Extracted branch name: $BRANCH_NAME"
+
+            # Additional debugging info
+            echo "Debug: Full environment:"
+            env | grep -i git || true
+
+            # Pull code
+            git init
+            git config --global credential.helper store
+            REPO_HOST=$(echo {{inputs.parameters.url}} | sed -e 's|https\?://||' -e 's|/.*||')
+            echo "http://$GIT_USERNAME:$GIT_PASSWORD@$REPO_HOST" > ~/.git-credentials
+
+            # Check if remote origin already exists
+            if git remote get-url origin > /dev/null 2>&1; then
+              echo "Remote origin already exists, updating URL"
+              git remote set-url origin {{inputs.parameters.url}}
+            else
+              echo "Adding remote origin"
+              git remote add origin {{inputs.parameters.url}}
+            fi
+
+            # 使用完整克隆而不是浅克隆，确保可以访问完整的Git历史记录
+            echo "Fetching branch: $BRANCH_NAME"
+
+            # 首先尝试获取远程分支
+            if git fetch origin $BRANCH_NAME; then
+              echo "Successfully fetched remote branch $BRANCH_NAME"
+              git checkout FETCH_HEAD
+            else
+              echo "Failed to fetch remote branch $BRANCH_NAME, trying to clone default branch"
+              # 如果获取特定分支失败，则克隆默认分支
+              git fetch origin
+              # 列出可用的远程分支
+              echo "Available remote branches:"
+              git branch -r
+              
+              # 尝试检出分支，如果失败则列出所有分支
+              if ! git checkout $BRANCH_NAME; then
+                echo "Failed to checkout branch $BRANCH_NAME"
+                echo "Local branches:"
+                git branch -a
+                exit 1
+              fi
+            fi
+
+            PROJECT_NAME=$(echo {{inputs.parameters.url}} | awk -F'/' '{print $NF}' | sed 's/\..*//')
+            echo -n "$PROJECT_NAME" > /tmp/project-name
+            echo "Project name: $PROJECT_NAME"
+            
+            # 确保脚本以成功状态退出
+            exit 0
+      outputs:
+        parameters:
+          - name: project-name
+            valueFrom:
+              path: /tmp/project-name

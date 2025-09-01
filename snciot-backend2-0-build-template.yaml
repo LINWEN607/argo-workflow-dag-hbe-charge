@@ -1,0 +1,96 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: snciot-backend2-0-build-template
+  namespace: argo-cicd
+spec:
+  securityContext:
+    runAsNonRoot: false
+  serviceAccountName: argo-workflow
+  volumes:
+    - name: shared-workspace
+      persistentVolumeClaim:
+        claimName: shared-data-pvc-2
+    - name: credentials
+      secret:
+        secretName: deployment-ssh-keys
+  templates:
+    - name: snciot-backend2-0-build
+      inputs:
+        parameters:
+          - name: branch
+      volumes:
+        - name: shared-workspace
+          persistentVolumeClaim:
+            claimName: shared-data-pvc-2
+      container:
+        image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/library/node:16-alpine3.14
+        imagePullPolicy: IfNotPresent
+        workingDir: /src
+        volumeMounts:
+          - name: shared-workspace
+            mountPath: /src
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -e
+
+            echo "开始 Vite 编译..."
+
+            # 显示当前Node.js和npm版本
+            node --version
+            npm --version
+
+            # 配置npm镜像
+            npm config set registry https://registry.npmmirror.com
+            npm config set sass_binary_site=https://npm.taobao.org/mirrors/node-sass
+
+            # 安装cnpm全局工具
+            npm install -g cnpm --registry=https://registry.npmmirror.com
+
+            # 显式安装关键依赖以解决构建时找不到模块的问题
+            cnpm install lodash --save
+            cnpm install dayjs --save
+            cnpm install @vueuse/core --save
+
+            # 安装项目依赖（包括vite）
+            cnpm install
+
+            # 验证vite是否正确安装
+            ls -la node_modules/.bin/vite
+
+            # 显示项目根目录结构
+            ls -la
+
+            # 执行Vite构建
+            npm run build
+
+            # 使用固定的工作空间路径
+            outputDir="/src"
+
+            # 验证构建是否成功
+            if [ ! -d "${outputDir}/hbe_backend" ]; then
+                echo "构建完成但未生成hbe_backend目录，检查构建配置"
+                echo "当前工作空间路径: ${outputDir}"
+                ls -la
+                exit 1
+            fi
+
+            # 显示构建输出目录内容
+            ls -la "${outputDir}/"
+
+            # 验证构建是否成功
+            if [ ! -f "${outputDir}/hbe_backend/index.html" ]; then
+                # 检查是否有其他HTML文件
+                find ${outputDir}/hbe_backend -name "*.html" -type f
+                echo "Vite 构建失败，未生成 index.html 文件"
+                exit 1
+            fi
+
+            echo "Vite编译成功完成"
+            echo -n "Build successful" > /tmp/build-output
+      outputs:
+        parameters:
+          - name: build-output
+            valueFrom:
+              path: /tmp/build-output

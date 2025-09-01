@@ -1,0 +1,88 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: snciot-backend2-0-pipeline
+  namespace: argo-cicd
+spec:
+  securityContext:
+    runAsNonRoot: false
+  entrypoint: snciot-backend2-0-pipeline
+  serviceAccountName: argo
+  volumes:
+    - name: credentials
+      secret:
+        secretName: deployment-ssh-keys
+    - name: gitlab-credentials
+      secret:
+        secretName: gitlab-pull-secret
+    - name: dingtalk-credentials
+      secret:
+        secretName: dingtalk-webhook-secret
+  templates:
+    - name: snciot-backend2-0-pipeline
+      steps:
+        - - name: snciot-backend2-0-pull
+            templateRef:
+              name: snciot-backend2-0-pull-template
+              template: snciot-backend2-0-pull
+            arguments:
+              parameters:
+                - name: branch
+                  value: "{{workflow.parameters.branch}}"
+                - name: url
+                  value: "{{workflow.parameters.git-repo-url}}"
+
+        - - name: snciot-backend2-0-build
+            templateRef:
+              name: snciot-backend2-0-build-template
+              template: snciot-backend2-0-build
+            arguments:
+              parameters:
+                - name: branch
+                  value: "{{workflow.parameters.branch}}"
+
+        - - name: snciot-backend2-0-deploy
+            templateRef:
+              name: snciot-backend2-0-deploy-template
+              template: snciot-backend2-0-deploy
+            arguments:
+              parameters:
+                - name: target-branch
+                  value: "{{workflow.parameters.target-branch}}"
+                - name: project-name
+                  value: "{{workflow.parameters.project-name}}"
+                - name: git-commit
+                  value: "{{workflow.parameters.git-commit}}"
+                - name: commit-message
+                  value: "{{workflow.parameters.commit-message}}"
+                - name: build-time
+                  value: "{{workflow.parameters.build-time}}"
+                - name: git-url
+                  value: "{{workflow.parameters.git-repo-url}}"
+    - name: snciot-backend2-0-dingtalk-notify
+      templateRef:
+        name: snciot-backend2-0-dingtalk-notify-template
+        template: snciot-backend2-0-dingtalk-notify
+      arguments:
+        parameters:
+          - name: project-name
+            value: "{{workflow.parameters.project-name}}"
+          - name: commit-id
+            value: "{{workflow.parameters.commit-id}}"
+          - name: commit-message
+            value: "{{workflow.parameters.commit-message}}"
+          - name: commit-author
+            value: "{{workflow.parameters.commit-author}}"
+          - name: build-user
+            value: "{{workflow.parameters.build-user}}"
+          - name: workflow-namespace
+            value: "{{workflow.namespace}}"
+          - name: workflow-name
+            value: "{{workflow.name}}"
+          - name: workflow-status
+            value: "{{workflow.status}}"
+          - name: workflow-duration
+            value: "{{workflow.duration}}"
+          - name: workflow-start-time
+            value: "{{workflow.startedAt}}"
+  onExit: snciot-backend2-0-dingtalk-notify

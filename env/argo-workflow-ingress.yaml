@@ -1,0 +1,38 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig":{ "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:348951190761:certificate/7f41a5ef-3814-4735-b191-995118dbc9cd
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: slabs-eks-ingress
+    alb.ingress.kubernetes.io/group.order: "1"
+    alb.ingress.kubernetes.io/load-balancer-name: slabs-eks-alb
+    kubernetes.io/ingress.class: alb
+  name: argo-workflow-ingress
+  namespace: argo-cicd
+spec:
+  rules:
+  - host: workflow.slabs.kr
+    http:
+      paths:
+      - backend:
+          service:
+            name: argo-workflows-server
+            port:
+              number: 2746
+        path: /
+        pathType: Prefix
+  - host: webhook.slabs.kr
+    http:
+      paths:
+      - backend:
+          service:
+            name: sample-eventsource-eventsource-svc
+            port:
+              number: 12000
+        path: /
+        pathType: Prefix

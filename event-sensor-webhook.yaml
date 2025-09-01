@@ -1,0 +1,192 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: sample-eventsensor
+  namespace: argo-cicd
+spec:
+  template:
+    serviceAccountName: argo
+  dependencies:
+    - name: webhook-snciot
+      eventSourceName: sample-eventsource
+      eventName: snciot-backend2-0
+  triggers:
+    - template:
+        name: snciot-backend2-0-trigger
+        argoWorkflow:
+          group: argoproj.io
+          version: v1alpha1
+          resource: workflows
+          operation: submit
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: snciot-backend2-0-
+                namespace: argo-cicd
+              spec:
+                serviceAccountName: argo-workflow
+                entrypoint: snciot-backend2-0-pipeline
+                arguments:
+                  parameters:
+                    - name: branch
+                      value: <branch>
+                    - name: git-repo-url
+                      value: <git-repo-url>
+                    - name: commit-author
+                      value: <commit-author>
+                    - name: commit-message
+                      value: <commit-message>
+                    - name: commit-id
+                      value: <commit-id>
+                    - name: project-name
+                      value: <project-name>
+                    - name: target-branch
+                      value: <target-branch>
+                    - name: build-user
+                      value: <build-user>
+                    - name: duration
+                      value: <duration>
+                    - name: webhook-url
+                      value: <webhook-url>
+                    - name: secret-token
+                      value: <secret-token>
+                    - name: git-url
+                      value: <git-url>
+                    - name: git-commit
+                      value: <git-commit>
+                    - name: build-time
+                      value: <build-time>
+                    - name: workflow-namespace
+                      value: "argo"
+                    - name: workflow-name
+                      value: "{{workflow.name}}"
+                templates:
+                  - name: snciot-backend2-0-pipeline
+                    steps:
+                      - - name: snciot-backend2-0-pull
+                          templateRef:
+                            name: snciot-backend2-0-pipeline
+                            template: snciot-backend2-0-pull
+                          arguments:
+                            parameters:
+                              - name: branch
+                                value: "{{workflow.parameters.branch}}"
+                              - name: url
+                                value: "{{workflow.parameters.git-repo-url}}"
+
+                      - - name: snciot-backend2-0-build
+                          templateRef:
+                            name: snciot-backend2-0-pipeline
+                            template: snciot-backend2-0-build
+                          arguments:
+                            parameters:
+                              - name: branch
+                                value: "{{workflow.parameters.branch}}"
+
+                      - - name: snciot-backend2-0-deploy
+                          templateRef:
+                            name: snciot-backend2-0-pipeline
+                            template: snciot-backend2-0-deploy
+                          arguments:
+                            parameters:
+                              - name: target-branch
+                                value: "{{workflow.parameters.target-branch}}"
+                              - name: project-name
+                                value: "{{workflow.parameters.project-name}}"
+                              - name: git-commit
+                                value: "{{workflow.parameters.git-commit}}"
+                              - name: commit-message
+                                value: "{{workflow.parameters.commit-message}}"
+                              - name: build-time
+                                value: "{{workflow.parameters.build-time}}"
+                              - name: git-url
+                                value: "{{workflow.parameters.git-repo-url}}"
+
+                  - name: snciot-backend2-0-dingtalk-notify
+                    steps:
+                      - - name: notify
+                          templateRef:
+                            name: snciot-backend2-0-pipeline
+                            template: snciot-backend2-0-dingtalk-notify
+                          arguments:
+                            parameters:
+                              - name: project-name
+                                value: "{{workflow.parameters.project-name}}"
+                              - name: commit-id
+                                value: "{{workflow.parameters.commit-id}}"
+                              - name: commit-message
+                                value: "{{workflow.parameters.commit-message}}"
+                              - name: commit-author
+                                value: "{{workflow.parameters.commit-author}}"
+                              - name: build-user
+                                value: "{{workflow.parameters.build-user}}"
+                              - name: workflow-namespace
+                                value: "{{workflow.namespace}}"
+                              - name: workflow-name
+                                value: "{{workflow.name}}"
+          parameters:
+            - src:
+                dependencyName: webhook-snciot
+                dataKey: body.ref
+              dest: spec.arguments.parameters.0.value
+              transform:
+                expression: 'trimPrefix("refs/heads/", value)'
+            - src:
+                dependencyName: webhook-snciot
+                dataKey: body.project.git_http_url
+              dest: spec.arguments.parameters.1.value
+            - src:
+                dependencyName: webhook-snciot
+                dataKey: body.commits[0].author.name
+              dest: spec.arguments.parameters.2.value
+            - src:
+                dependencyName: webhook-snciot
+                dataKey: body.commits[0].message
+              dest: spec.arguments.parameters.3.value
+            - src:
+                dependencyName: webhook-snciot
+                dataKey: body.commits[0].id
+              dest: spec.arguments.parameters.4.value
+            - src:
+                dependencyName: webhook-snciot
+                dataKey: body.project.name
+              dest: spec.arguments.parameters.5.value
+            - src:
+                dependencyName: webhook-snciot
+                dataKey: body.ref
+              dest: spec.arguments.parameters.6.value
+              transform:
+                expression: 'trimPrefix("refs/heads/", value)'
+            - src:
+                dependencyName: webhook-snciot
+                dataKey: body.user_username
+              dest: spec.arguments.parameters.7.value
+            - src:
+                dependencyName: webhook-snciot
+                dataKey: body.duration
+              dest: spec.arguments.parameters.8.value
+            - src:
+                dependencyName: webhook-snciot
+                dataKey: body.webhook_url
+              dest: spec.arguments.parameters.9.value
+            - src:
+                dependencyName: webhook-snciot
+                dataKey: body.secret_token
+              dest: spec.arguments.parameters.10.value
+            - src:
+                dependencyName: webhook-snciot
+                dataKey: body.project.git_http_url
+              dest: spec.arguments.parameters.11.value
+            - src:
+                dependencyName: webhook-snciot
+                dataKey: body.after
+              dest: spec.arguments.parameters.12.value
+            - src:
+                dependencyName: webhook-snciot
+                dataKey: body.commits[0].timestamp
+              dest: spec.arguments.parameters.13.value
+      policy:
+        status:
+          allow: [200, 201]

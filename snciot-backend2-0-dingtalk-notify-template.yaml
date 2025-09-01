@@ -1,0 +1,206 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: snciot-backend2-0-dingtalk-notify-template
+  namespace: argo-cicd
+spec:
+  securityContext:
+    runAsNonRoot: false
+  serviceAccountName: argo-workflow
+  volumes:
+    - name: credentials
+      secret:
+        secretName: deployment-ssh-keys
+  templates:
+    - name: snciot-backend2-0-dingtalk-notify
+      inputs:
+        parameters:
+          - name: project-name
+          - name: commit-id
+          - name: commit-message
+          - name: commit-author
+          - name: build-user
+          - name: workflow-namespace
+          - name: workflow-name
+          - name: workflow-status
+            value: "{{workflow.status}}"
+          - name: workflow-duration
+            value: "{{workflow.duration}}"
+          - name: workflow-start-time
+            value: "{{workflow.startedAt}}"
+      container:
+        image: curlimages/curl
+        env:
+          - name: WEBHOOK_URL
+            valueFrom:
+              secretKeyRef:
+                name: dingtalk-webhook-secret
+                key: webhook-url
+          - name: SECRET_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: dingtalk-webhook-secret
+                key: secret-token
+          - name: PROJECT_NAME
+            value: "{{inputs.parameters.project-name}}"
+          - name: COMMIT_ID
+            value: "{{inputs.parameters.commit-id}}"
+          - name: COMMIT_MESSAGE
+            value: "{{inputs.parameters.commit-message}}"
+          - name: COMMIT_AUTHOR
+            value: "{{inputs.parameters.commit-author}}"
+          - name: BUILD_USER
+            value: "{{inputs.parameters.build-user}}"
+          - name: WORKFLOW_NAMESPACE
+            value: "{{inputs.parameters.workflow-namespace}}"
+          - name: WORKFLOW_NAME
+            value: "{{inputs.parameters.workflow-name}}"
+          - name: WORKFLOW_STATUS
+            value: "{{inputs.parameters.workflow-status}}"
+          - name: WORKFLOW_DURATION
+            value: "{{inputs.parameters.workflow-duration}}"
+          - name: WORKFLOW_START_TIME
+            value: "{{inputs.parameters.workflow-start-time}}"
+          - name: TZ
+            value: "Asia/Shanghai"
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -e
+
+            # 验证关键参数是否存在
+            if [ -z "${WEBHOOK_URL}" ]; then
+              echo "Error: WEBHOOK_URL is not set"
+              exit 1
+            fi
+
+            if [ -z "${SECRET_TOKEN}" ]; then
+              echo "Error: SECRET_TOKEN is not set"
+              exit 1
+            fi
+
+            echo "Debug: All parameters extracted successfully"
+            echo "PROJECT_NAME: $PROJECT_NAME"
+            echo "WORKFLOW_NAME: $WORKFLOW_NAME"
+            echo "APPS_TO_BUILD: 前端Vite项目"
+            echo "COMMIT_ID: $COMMIT_ID"
+            echo "COMMIT_MESSAGE: $COMMIT_MESSAGE"
+            echo "COMMIT_AUTHOR: $COMMIT_AUTHOR"
+            echo "BUILD_USER: $BUILD_USER"
+            echo "WORKFLOW_STATUS: $WORKFLOW_STATUS"
+            echo "WORKFLOW_DURATION: $WORKFLOW_DURATION"
+            echo "WORKFLOW_START_TIME: $WORKFLOW_START_TIME"
+            echo "WORKFLOW_NAMESPACE: $WORKFLOW_NAMESPACE"
+
+            # 获取手机号（根据提交者匹配）
+            case "$COMMIT_AUTHOR" in
+              "lins")
+                PHONE_NUMBER="13612373427"
+                ;;
+              "dlcios")
+                PHONE_NUMBER="13048932770"
+                ;;
+              "wangwu")
+                PHONE_NUMBER="13700137000"
+                ;;
+              "gxy")
+                PHONE_NUMBER="15549814468"
+                ;;
+              "ganxiaoyu")
+                PHONE_NUMBER="15549814468"
+                ;;
+              "linwen")
+                PHONE_NUMBER="18888888888"
+                ;;
+              *)
+                PHONE_NUMBER=""
+                ;;
+            esac
+
+            echo "PHONE_NUMBER: $PHONE_NUMBER"
+
+            # 根据部署任务状态设置标题和内容
+            # Argo Workflows的主要状态: Succeeded, Failed, Error
+            case "$WORKFLOW_STATUS" in
+              "Succeeded")
+                TITLE="构建成功通知"
+                STATUS_TEXT="构建成功"
+                ;;
+              "Failed"|"Error")
+                TITLE="构建失败通知"
+                STATUS_TEXT="构建失败"
+                ;;
+              *)
+                TITLE="构建结果未知通知"
+                STATUS_TEXT="构建结果未知"
+                ;;
+            esac
+
+            # 使用 Python 解析和格式化时间
+            if [ -n "$WORKFLOW_START_TIME" ]; then
+              # 使用 Python 转换时间格式 (UTC 到 Asia/Shanghai)
+              TIMESTAMP=$(python3 -c "
+            import datetime
+            try:
+                # 解析 UTC 时间
+                utc_time = datetime.datetime.strptime('$WORKFLOW_START_TIME', '%Y-%m-%dT%H:%M:%SZ')
+                # 添加时区信息并转换为上海时区
+                utc_time = utc_time.replace(tzinfo=datetime.timezone.utc)
+                shanghai_time = utc_time.astimezone(datetime.timezone(datetime.timedelta(hours=8)))
+                print(shanghai_time.strftime('%Y-%m-%d %H:%M:%S'))
+            except Exception as e:
+                print('$WORKFLOW_START_TIME')
+            " 2>/dev/null || echo "$WORKFLOW_START_TIME")
+            else
+              TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
+            fi
+
+            echo "Debug: Time calculation results"
+            echo "WORKFLOW_START_TIME: $WORKFLOW_START_TIME"
+            echo "TIMESTAMP: $TIMESTAMP"
+
+            # 构建消息内容
+            MESSAGE="### $STATUS_TEXT\n\n- **项目名称**：$PROJECT_NAME\n- **任务名称**：$WORKFLOW_NAME\n- **构建服务**：前端Vite项目\n- **任务状态**：$STATUS_TEXT\n- **任务持续时间**：$WORKFLOW_DURATION\n- **Commit ID**：$COMMIT_ID\n- **Commit 信息**：$COMMIT_MESSAGE\n- **修改人**：$COMMIT_AUTHOR\n\n> 构建时间：$TIMESTAMP\n> 构建人：$BUILD_USER\n\n**操作建议**："
+
+            # 添加操作建议
+            if [ "$WORKFLOW_STATUS" = "Succeeded" ]; then
+              MESSAGE="$MESSAGE\n- 可到对应项目分支的环境测试验证功能。(/usr/local/www/web/)此路径备份此前四个版本的文件，可按时间戳区分"
+            else
+              MESSAGE="$MESSAGE\n- 请联系林文进行排查"
+            fi
+
+            # 如果有手机号，在消息中添加@提醒
+            if [ -n "$PHONE_NUMBER" ]; then
+              MESSAGE="$MESSAGE\n\n@$PHONE_NUMBER"
+            fi
+
+            # 构建JSON数据
+            JSON_DATA="{\"msgtype\": \"markdown\", \"markdown\": {\"title\": \"$TITLE\", \"text\": \"$MESSAGE\"}}"
+
+            # 添加@功能
+            if [ -n "$PHONE_NUMBER" ]; then
+              JSON_DATA="{\"msgtype\": \"markdown\", \"markdown\": {\"title\": \"$TITLE\", \"text\": \"$MESSAGE\"}, \"at\": {\"atMobiles\": [\"$PHONE_NUMBER\"], \"isAtAll\": false}}"
+            fi
+
+            echo "JSON_DATA to be sent:"
+            echo "$JSON_DATA"
+
+            # 生成精确到毫秒的时间戳（使用Python生成）
+            TIMESTAMP_MS=$(python3 -c "import time; print(int(time.time()*1000))")
+            echo "Timestamp: $TIMESTAMP_MS"
+
+            # 生成签名（使用Python生成，确保正确性）
+            SIGNATURE=$(python3 -c "import hmac; import hashlib; import base64; import urllib.parse; timestamp = '$TIMESTAMP_MS'; secret = '$SECRET_TOKEN'; secret_enc = secret.encode('utf-8'); string_to_sign = '{}\n{}'.format(timestamp, secret); string_to_sign_enc = string_to_sign.encode('utf-8'); hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest(); sign = urllib.parse.quote_plus(base64.b64encode(hmac_code).decode('utf-8')); print(sign)")
+            echo "URL encoded signature: $SIGNATURE"
+
+            # 构建带签名的URL
+            WEBHOOK_URL_WITH_SIGN="${WEBHOOK_URL}&timestamp=${TIMESTAMP_MS}&sign=${SIGNATURE}"
+
+            echo "WEBHOOK_URL_WITH_SIGN: $WEBHOOK_URL_WITH_SIGN"
+
+            # 发送请求
+            echo "Debug: Request send time: $(date +"%Y-%m-%d %H:%M:%S")"
+            echo "Sending request to DingTalk..."
+            RESPONSE=$(curl -s -w "%{http_code}" -X POST -H "Content-Type: application/json" -d "$JSON_DATA" "$WEBHOOK_URL_WITH_SIGN")
+            echo "Response: $RESPONSE"
+            echo "Debug: Request finish time: $(date +"%Y-%m-%d %H:%M:%S")"
