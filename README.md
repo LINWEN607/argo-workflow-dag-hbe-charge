@@ -82,6 +82,8 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
 
 4. **GitLab Webhook 密钥** (`gitlab-webhook-secret.yaml`)
    - secretToken: GitLab Webhook 验证令牌
+   - 当前设置为: cicd (base64编码为: Y2ljZA==)
+   - 注意: 此密钥用于 GitLab Webhook 认证，需要与 GitLab Webhook 配置中的 Secret Token 保持一致
 
 ## 部署步骤
 
@@ -152,3 +154,15 @@ Webhook 请求应包含以下参数：
 - build-user: 构建用户
 - git-commit: Git 提交哈希
 - build-time: 构建时间
+
+## GitLab Webhook 配置
+
+在 GitLab 中配置 Webhook 时，请确保以下配置正确：
+
+1. URL: `http://<node-ip>:30080/snciot_backend2-0`
+2. Secret Token: `cicd` (与 gitlab-webhook-secret.yaml 中配置的值一致)
+3. Trigger: 选择 "Push events"
+
+## 问题说明
+
+EventSource 中的 webhook 配置需要指定 `authHeaders: ["X-Gitlab-Token"]` 来明确使用 GitLab 的认证头部，否则默认可能使用其他认证方式（如 Bearer Token）。

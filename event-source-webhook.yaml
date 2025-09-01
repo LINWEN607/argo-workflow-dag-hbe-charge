@@ -17,3 +17,4 @@ spec:
       authSecret:
         name: gitlab-webhook-secret
         key: secretToken
+      authHeaders: ["X-Gitlab-Token"]
