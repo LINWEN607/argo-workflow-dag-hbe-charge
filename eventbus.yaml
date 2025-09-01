@@ -9,6 +9,6 @@ spec:
       replicas: 1
       auth: token
       persistence:
-        storageClassName: ""
+        storageClassName: nfs-client
         accessMode: ReadWriteOnce
         volumeSize: 1Gi

@@ -48,8 +48,11 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
 - replicas: NATS 集群副本数，设置为1以节省资源
 - auth: 认证策略，使用 token 认证方式
 - persistence: 持久化配置，确保事件数据不会丢失
+  - storageClassName: 使用 nfs-client 存储类，与项目中的 PVC 保持一致
+  - accessMode: ReadWriteOnce 访问模式
+  - volumeSize: 1Gi 存储空间
 
-### 3. Workflow Templates (工作流模板)
+### 4. Workflow Templates (工作流模板)
 
 #### 主工作流模板
 文件: `snciot-backend2-0-pipeline.yaml`
@@ -59,26 +62,6 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
 2. 代码构建 (snciot-backend2-0-build)
 3. 应用部署 (snciot-backend2-0-deploy)
 4. 钉钉通知 (snciot-backend2-0-dingtalk-notify)
-
-#### 代码拉取模板
-文件: `snciot-backend2-0-pull-template.yaml`
-
-负责从 Git 仓库拉取代码，支持不同分支的代码获取。
-
-#### 代码构建模板
-文件: `snciot-backend2-0-build-template.yaml`
-
-负责执行代码构建任务，使用 Node.js 环境进行前端项目构建。
-
-#### 应用部署模板
-文件: `snciot-backend2-0-deploy-template.yaml`
-
-负责将构建好的应用部署到目标服务器，支持多环境部署（dev、main、release）。
-
-#### 钉钉通知模板
-文件: `snciot-backend2-0-dingtalk-notify-template.yaml`
-
-在流水线执行完成后发送通知到钉钉群，包含构建状态、提交信息等。
 
 ## 配置说明
 
@@ -115,23 +98,28 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
    kubectl apply -f gitlab-webhook-secret.yaml -n argo-cicd
    ```
 
-3. 部署 EventBus:
+3. 部署 PVC:
+   ```bash
+   kubectl apply -f env/pvc.yaml -n argo-cicd
+   ```
+
+4. 部署 EventBus:
    ```bash
    kubectl apply -f eventbus.yaml -n argo-cicd
    ```
 
-4. 部署 Event Source 和 Service:
+5. 部署 Event Source 和 Service:
    ```bash
    kubectl apply -f event-source-webhook.yaml -n argo-cicd
    kubectl apply -f event-source-webhook-service.yaml -n argo-cicd
    ```
 
-5. 部署 Event Sensor:
+6. 部署 Event Sensor:
    ```bash
    kubectl apply -f event-sensor-webhook.yaml -n argo-cicd
    ```
 
-6. 部署 Workflow Templates:
+7. 部署 Workflow Templates:
    ```bash
    kubectl apply -f snciot-backend2-0-pull-template.yaml -n argo-cicd
    kubectl apply -f snciot-backend2-0-build-template.yaml -n argo-cicd
