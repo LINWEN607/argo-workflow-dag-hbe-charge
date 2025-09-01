@@ -18,6 +18,7 @@
 ├── gitlab-pull-secret.yaml             # GitLab 拉取代碼密钥
 ├── gitlab-webhook-secret.yaml          # GitLab Webhook 密钥
 ├── event-source-webhook-service.yaml   # Webhook 服务配置
+├── eventbus.yaml                       # EventBus配置
 └── pvc.yaml                            # 持久卷声明
 env
 ```
@@ -37,6 +38,11 @@ env
 监听来自 Event Source 的事件，并触发相应的工作流。包含两个触发器：
 - snciot-backend2-0-trigger: 处理 snciot-backend2-0 项目事件
 - hbe-charge-trigger: 处理 hbe-charge 项目事件
+
+### 3. EventBus (事件总线)
+文件: `eventbus.yaml`
+
+负责事件消息的传输和路由，是 EventSource 和 Sensor 之间通信的枢纽。
 
 ### 3. Workflow Templates (工作流模板)
 
