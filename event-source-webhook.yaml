@@ -9,12 +9,27 @@ spec:
       - name: gitlab-eventsource
         port: 12000
         targetPort: 12000
-  webhook:
+  gitlab:
     snciot-backend2-0:
-      port: "12000"
-      endpoint: /snciot_backend2-0
-      method: POST
-      authSecret:
-        name: gitlab-webhook-secret
+      # GitLab项目ID或路径
+      projects:
+        - "snciot_backend2-0"
+      # GitLab webhook配置
+      webhook:
+        endpoint: /snciot_backend2-0
+        port: "12000"
+        method: POST
+        # 外部可访问的URL，用于GitLab回调
+        url: http://192.168.30.149:30080
+      # 监听的事件类型
+      events:
+        - PushEvents
+      # webhook密钥（使用现有的gitlab-webhook-secret）
+      secretToken:
         key: secretToken
-      authHeaders: ["X-Gitlab-Token"]
+        name: gitlab-webhook-secret
+      # SSL验证设置
+      enableSSLVerification: false
+      # Gitlab基础URL
+      gitlabBaseURL: http://192.168.31.195
+      deleteHookOnFinish: true
