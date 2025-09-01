@@ -90,7 +90,13 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
    kubectl create namespace argo-cicd
    ```
 
-2. 部署所有 Secret:
+2. 部署 RBAC 和 ServiceAccount:
+   ```bash
+   kubectl apply -f env/rbac.yaml -n argo-cicd
+   kubectl apply -f env/serviceaccount.yaml -n argo-cicd
+   ```
+
+3. 部署所有 Secret:
    ```bash
    kubectl apply -f dingtalk-webhook-secret.yaml -n argo-cicd
    kubectl apply -f deployment-ssh-keys.yaml -n argo-cicd
@@ -98,28 +104,28 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
    kubectl apply -f gitlab-webhook-secret.yaml -n argo-cicd
    ```
 
-3. 部署 PVC:
+4. 部署 PVC:
    ```bash
    kubectl apply -f env/pvc.yaml -n argo-cicd
    ```
 
-4. 部署 EventBus:
+5. 部署 EventBus:
    ```bash
    kubectl apply -f eventbus.yaml -n argo-cicd
    ```
 
-5. 部署 Event Source 和 Service:
+6. 部署 Event Source 和 Service:
    ```bash
    kubectl apply -f event-source-webhook.yaml -n argo-cicd
    kubectl apply -f env/event-source-webhook-service.yaml -n argo-cicd
    ```
 
-6. 部署 Event Sensor:
+7. 部署 Event Sensor:
    ```bash
    kubectl apply -f event-sensor-webhook.yaml -n argo-cicd
    ```
 
-7. 部署 Workflow Templates:
+8. 部署 Workflow Templates:
    ```bash
    kubectl apply -f snciot-backend2-0-pull-template.yaml -n argo-cicd
    kubectl apply -f snciot-backend2-0-build-template.yaml -n argo-cicd
