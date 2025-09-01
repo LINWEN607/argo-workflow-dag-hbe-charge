@@ -111,7 +111,7 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
 5. 部署 Event Source 和 Service:
    ```bash
    kubectl apply -f event-source-webhook.yaml -n argo-cicd
-   kubectl apply -f event-source-webhook-service.yaml -n argo-cicd
+   kubectl apply -f env/event-source-webhook-service.yaml -n argo-cicd
    ```
 
 6. 部署 Event Sensor:

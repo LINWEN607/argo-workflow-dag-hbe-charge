@@ -11,4 +11,4 @@ spec:
       targetPort: 12000
       nodePort: 30080
   selector:
-    app: gitlab-eventsource
+    eventsource-name: gitlab-eventsource
