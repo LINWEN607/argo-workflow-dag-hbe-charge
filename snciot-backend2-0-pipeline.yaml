@@ -8,16 +8,6 @@ spec:
     runAsNonRoot: false
   entrypoint: snciot-backend2-0-pipeline
   serviceAccountName: argo
-  volumes:
-    - name: credentials
-      secret:
-        secretName: deployment-ssh-keys
-    - name: gitlab-credentials
-      secret:
-        secretName: gitlab-pull-secret
-    - name: dingtalk-credentials
-      secret:
-        secretName: dingtalk-webhook-secret
   templates:
     - name: snciot-backend2-0-pipeline
       steps:
