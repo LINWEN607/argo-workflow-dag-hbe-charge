@@ -6,7 +6,7 @@ metadata:
 spec:
   securityContext:
     runAsNonRoot: false
-  serviceAccountName: argo-workflow
+  serviceAccountName: argo
   volumes:
     - name: credentials
       secret:
