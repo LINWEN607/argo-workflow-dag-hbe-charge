@@ -1,12 +1,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: EventSource
 metadata:
-  name: sample-eventsource
+  name: gitlab-eventsource
   namespace: argo-cicd
 spec:
   service:
     ports:
-      - name: sample-eventsource
+      - name: gitlab-eventsource
         port: 12000
         targetPort: 12000
   webhook:

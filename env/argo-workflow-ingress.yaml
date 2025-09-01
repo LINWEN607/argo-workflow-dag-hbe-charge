@@ -31,7 +31,7 @@ spec:
       paths:
       - backend:
           service:
-            name: sample-eventsource-eventsource-svc
+            name: gitlab-eventsource-eventsource-svc
             port:
               number: 12000
         path: /
