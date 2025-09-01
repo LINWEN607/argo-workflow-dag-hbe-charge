@@ -7,7 +7,7 @@ spec:
   nats:
     native:
       replicas: 1
-      auth: true
+      auth: token
       persistence:
         storageClassName: ""
         accessMode: ReadWriteOnce

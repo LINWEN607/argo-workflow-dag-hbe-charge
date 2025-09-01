@@ -44,6 +44,11 @@ env
 
 负责事件消息的传输和路由，是 EventSource 和 Sensor 之间通信的枢纽。
 
+EventBus 使用 NATS 作为消息传输后端，配置说明：
+- replicas: NATS 集群副本数，设置为1以节省资源
+- auth: 认证策略，使用 token 认证方式
+- persistence: 持久化配置，确保事件数据不会丢失
+
 ### 3. Workflow Templates (工作流模板)
 
 #### 主工作流模板
@@ -110,9 +115,9 @@ env
    kubectl apply -f gitlab-webhook-secret.yaml -n argo-cicd
    ```
 
-3. 部署 PVC:
+3. 部署 EventBus:
    ```bash
-   kubectl apply -f pvc.yaml -n argo-cicd
+   kubectl apply -f eventbus.yaml -n argo-cicd
    ```
 
 4. 部署 Event Source 和 Service:
