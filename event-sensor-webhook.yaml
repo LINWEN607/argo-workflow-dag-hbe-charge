@@ -138,7 +138,7 @@ spec:
               dest: spec.arguments.parameters.3.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: after
+                dataKey: commits[0].id
               dest: spec.arguments.parameters.4.value
             - src:
                 dependencyName: snciot-backend2-0-dep
@@ -160,7 +160,7 @@ spec:
               dest: spec.arguments.parameters.8.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: after
+                dataKey: commits[0].id
               dest: spec.arguments.parameters.9.value
             - src:
                 dependencyName: snciot-backend2-0-dep
