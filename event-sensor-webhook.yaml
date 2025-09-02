@@ -128,7 +128,12 @@ spec:
                 dataKey: body.commits[0].author.name
               dest: spec.arguments.parameters.2.value
               transform:
-                expression: 'if .body.commits != null and length(.body.commits) > 0 and .body.commits[0].author != null and .body.commits[0].author.name != null then .body.commits[0].author.name else "Unknown Author" end'
+                expression: |
+                  if .body.commits != null and length(.body.commits) > 0 and .body.commits[0].author != null and .body.commits[0].author.name != null then
+                    .body.commits[0].author.name
+                  else
+                    "Unknown Author"
+                  end
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits[0].message
