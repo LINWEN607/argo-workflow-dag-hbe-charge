@@ -10,10 +10,6 @@ spec:
     - name: snciot-backend2-0-dep
       eventSourceName: gitlab-eventsource
       eventName: snciot-backend2-0
-      filters:
-        expression:
-          expr: |
-            trimPrefix("refs/heads/", data.body.ref) in ["master", "50"]
   triggers:
     - template:
         name: snciot-backend2-0-trigger
@@ -125,49 +121,38 @@ spec:
               dest: spec.arguments.parameters.1.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].author.name
-              dest: spec.arguments.parameters.2.value
-              transform:
-                expression: |
-                  if .body.commits != null and length(.body.commits) > 0 and .body.commits[0].author != null and .body.commits[0].author.name != null then
-                    .body.commits[0].author.name
-                  else
-                    "Unknown Author"
-                  end
-            - src:
-                dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits[0].message
-              dest: spec.arguments.parameters.3.value
+              dest: spec.arguments.parameters.2.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits[0].id
-              dest: spec.arguments.parameters.4.value
+              dest: spec.arguments.parameters.3.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.project.name
-              dest: spec.arguments.parameters.5.value
+              dest: spec.arguments.parameters.4.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.ref
-              dest: spec.arguments.parameters.6.value
+              dest: spec.arguments.parameters.5.value
               transform:
                 expression: 'trimPrefix("refs/heads/", value)'
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.user_username
-              dest: spec.arguments.parameters.7.value
+              dest: spec.arguments.parameters.6.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.repository.git_http_url
-              dest: spec.arguments.parameters.8.value
+              dest: spec.arguments.parameters.7.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits[0].id
-              dest: spec.arguments.parameters.9.value
+              dest: spec.arguments.parameters.8.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits[0].timestamp
-              dest: spec.arguments.parameters.10.value
+              dest: spec.arguments.parameters.9.value
       transform:
         - name: decode-gitlab-payload
           transformer:
