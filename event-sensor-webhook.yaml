@@ -7,7 +7,7 @@ spec:
   template:
     serviceAccountName: argo
   dependencies:
-    - name: webhook-snciot
+    - name: test-dep
       eventSourceName: gitlab-eventsource
       eventName: snciot-backend2-0
   triggers:
@@ -27,7 +27,75 @@ spec:
                 namespace: argo-cicd
               spec:
                 serviceAccountName: argo
-                entrypoint: snciot-backend2-0-pipeline
+                entrypoint: snciot-backend2-0-sensor-pipeline
+                templates:
+                  - name: snciot-backend2-0-sensor-pipeline
+                    steps:
+                      - - name: snciot-backend2-0-pull
+                          templateRef:
+                            name: snciot-backend2-0-pull-template
+                            template: snciot-backend2-0-pull
+                          arguments:
+                            parameters:
+                              - name: branch
+                                value: "{{workflow.parameters.branch}}"
+                              - name: url
+                                value: "{{workflow.parameters.git-repo-url}}"
+
+                      - - name: snciot-backend2-0-build
+                          templateRef:
+                            name: snciot-backend2-0-build-template
+                            template: snciot-backend2-0-build
+                          arguments:
+                            parameters:
+                              - name: branch
+                                value: "{{workflow.parameters.branch}}"
+
+                      - - name: snciot-backend2-0-deploy
+                          templateRef:
+                            name: snciot-backend2-0-deploy-template
+                            template: snciot-backend2-0-deploy
+                          arguments:
+                            parameters:
+                              - name: target-branch
+                                value: "{{workflow.parameters.target-branch}}"
+                              - name: project-name
+                                value: "{{workflow.parameters.project-name}}"
+                              - name: git-commit
+                                value: "{{workflow.parameters.git-commit}}"
+                              - name: commit-message
+                                value: "{{workflow.parameters.commit-message}}"
+                              - name: build-time
+                                value: "{{workflow.parameters.build-time}}"
+                              - name: git-url
+                                value: "{{workflow.parameters.git-repo-url}}"
+                                
+                      - - name: snciot-backend2-0-dingtalk-notify
+                          templateRef:
+                            name: snciot-backend2-0-dingtalk-notify-template
+                            template: snciot-backend2-0-dingtalk-notify
+                          arguments:
+                            parameters:
+                              - name: project-name
+                                value: "{{workflow.parameters.project-name}}"
+                              - name: commit-id
+                                value: "{{workflow.parameters.commit-id}}"
+                              - name: commit-message
+                                value: "{{workflow.parameters.commit-message}}"
+                              - name: commit-author
+                                value: "{{workflow.parameters.commit-author}}"
+                              - name: build-user
+                                value: "{{workflow.parameters.build-user}}"
+                              - name: workflow-namespace
+                                value: "{{workflow.namespace}}"
+                              - name: workflow-name
+                                value: "{{workflow.name}}"
+                              - name: workflow-status
+                                value: "{{workflow.status}}"
+                              - name: workflow-duration
+                                value: "{{workflow.duration}}"
+                              - name: workflow-start-time
+                                value: "{{workflow.startedAt}}"
                 arguments:
                   parameters:
                     - name: branch
@@ -41,53 +109,58 @@ spec:
                     - name: git-url
                     - name: git-commit
                     - name: build-time
+                    - name: workflow-namespace
+                    - name: workflow-name
+                    - name: workflow-status
+                    - name: workflow-duration
+                    - name: workflow-start-time
           parameters:
             - src:
-                dependencyName: webhook-snciot
+                dependencyName: test-dep
                 dataKey: ref
               dest: spec.arguments.parameters.0.value
               transform:
                 expression: "trimPrefix(\"refs/heads/\", value)"
             - src:
-                dependencyName: webhook-snciot
+                dependencyName: test-dep
                 dataKey: repository.git_http_url
               dest: spec.arguments.parameters.1.value
             - src:
-                dependencyName: webhook-snciot
+                dependencyName: test-dep
                 dataKey: commits[0].author.name
               dest: spec.arguments.parameters.2.value
             - src:
-                dependencyName: webhook-snciot
+                dependencyName: test-dep
                 dataKey: commits[0].message
               dest: spec.arguments.parameters.3.value
             - src:
-                dependencyName: webhook-snciot
+                dependencyName: test-dep
                 dataKey: after
               dest: spec.arguments.parameters.4.value
             - src:
-                dependencyName: webhook-snciot
+                dependencyName: test-dep
                 dataKey: project.name
               dest: spec.arguments.parameters.5.value
             - src:
-                dependencyName: webhook-snciot
+                dependencyName: test-dep
                 dataKey: ref
               dest: spec.arguments.parameters.6.value
               transform:
                 expression: "trimPrefix(\"refs/heads/\", value)"
             - src:
-                dependencyName: webhook-snciot
+                dependencyName: test-dep
                 dataKey: user_username
               dest: spec.arguments.parameters.7.value
             - src:
-                dependencyName: webhook-snciot
+                dependencyName: test-dep
                 dataKey: repository.git_http_url
               dest: spec.arguments.parameters.8.value
             - src:
-                dependencyName: webhook-snciot
+                dependencyName: test-dep
                 dataKey: after
               dest: spec.arguments.parameters.9.value
             - src:
-                dependencyName: webhook-snciot
+                dependencyName: test-dep
                 dataKey: commits[0].timestamp
               dest: spec.arguments.parameters.10.value
       policy:
