@@ -76,28 +76,6 @@ spec:
                     templateRef:
                       name: snciot-backend2-0-dingtalk-notify-template
                       template: snciot-backend2-0-dingtalk-notify
-                    arguments:
-                      parameters:
-                        - name: project-name
-                          value: "{{workflow.parameters.project-name}}"
-                        - name: commit-id
-                          value: "{{workflow.parameters.commit-id}}"
-                        - name: commit-message
-                          value: "{{workflow.parameters.commit-message}}"
-                        - name: commit-author
-                          value: "{{workflow.parameters.commit-author}}"
-                        - name: build-user
-                          value: "{{workflow.parameters.build-user}}"
-                        - name: workflow-namespace
-                          value: "{{workflow.namespace}}"
-                        - name: workflow-name
-                          value: "{{workflow.name}}"
-                        - name: workflow-status
-                          value: "{{workflow.status}}"
-                        - name: workflow-duration
-                          value: "{{workflow.duration}}"
-                        - name: workflow-start-time
-                          value: "{{workflow.startedAt}}"
                 arguments:
                   parameters:
                     - name: branch
