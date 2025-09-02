@@ -10,6 +10,9 @@ spec:
     - name: snciot-backend2-0-dep
       eventSourceName: gitlab-eventsource
       eventName: snciot-backend2-0
+      condition:
+        expression: |
+          trimPrefix("refs/heads/", ref) in ["master", "50"]
   triggers:
     - template:
         name: snciot-backend2-0-trigger
