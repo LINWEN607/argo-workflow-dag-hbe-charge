@@ -19,6 +19,7 @@ rules:
       - eventbus/status
       - workflowtemplates
       - workflows
+      - workflowtaskresults
     verbs:
       - create
       - delete
