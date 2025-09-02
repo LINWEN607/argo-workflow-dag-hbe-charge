@@ -2,10 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Sensor
 metadata:
   name: sample-eventsensor
-  namespace: argo-cicd
 spec:
-  template:
-    serviceAccountName: argo
   dependencies:
     - name: snciot-backend2-0-dep
       eventSourceName: gitlab-eventsource
@@ -13,153 +10,30 @@ spec:
   triggers:
     - template:
         name: snciot-backend2-0-trigger
-        argoWorkflow:
-          group: argoproj.io
-          version: v1alpha1
-          resource: workflows
-          operation: submit
-          source:
-            resource:
-              apiVersion: argoproj.io/v1alpha1
-              kind: Workflow
-              metadata:
-                generateName: snciot-backend2-0-
-                namespace: argo-cicd
+        k8s:
+          group: batch
+          kind: Job
+          metadata:
+            name: snciot-backend2-0-job
+          spec:
+            template:
               spec:
-                serviceAccountName: argo
-                entrypoint: snciot-backend2-0-sensor-pipeline
-                templates:
-                  - name: snciot-backend2-0-sensor-pipeline
-                    steps:
-                      - - name: snciot-backend2-0-pull
-                          templateRef:
-                            name: snciot-backend2-0-pull-template
-                            template: snciot-backend2-0-pull
-                          arguments:
-                            parameters:
-                              - name: branch
-                                value: "{{workflow.parameters.branch}}"
-                              - name: url
-                                value: "{{workflow.parameters.git-repo-url}}"
-                      - - name: snciot-backend2-0-build
-                          templateRef:
-                            name: snciot-backend2-0-build-template
-                            template: snciot-backend2-0-build
-                          arguments:
-                            parameters:
-                              - name: branch
-                                value: "{{workflow.parameters.branch}}"
-                      - - name: snciot-backend2-0-deploy
-                          templateRef:
-                            name: snciot-backend2-0-deploy-template
-                            template: snciot-backend2-0-deploy
-                          arguments:
-                            parameters:
-                              - name: target-branch
-                                value: "{{workflow.parameters.target-branch}}"
-                              - name: project-name
-                                value: "{{workflow.parameters.project-name}}"
-                              - name: git-commit
-                                value: "{{workflow.parameters.git-commit}}"
-                              - name: commit-message
-                                value: "{{workflow.parameters.commit-message}}"
-                              - name: build-time
-                                value: "{{workflow.parameters.build-time}}"
-                              - name: git-url
-                                value: "{{workflow.parameters.git-repo-url}}"
-                  - name: snciot-backend2-0-dingtalk-notify
-                    inputs:
-                      parameters:
-                        - name: project-name
-                        - name: commit-id
-                        - name: commit-message
-                        - name: commit-author
-                        - name: build-user
-                        - name: workflow-namespace
-                        - name: workflow-name
-                        - name: workflow-status
-                        - name: workflow-duration
-                        - name: workflow-start-time
-                    steps:
-                      - - name: notify
-                          templateRef:
-                            name: snciot-backend2-0-dingtalk-notify-template
-                            template: snciot-backend2-0-dingtalk-notify
-                          arguments:
-                            parameters:
-                              - name: project-name
-                                value: "{{inputs.parameters.project-name}}"
-                              - name: commit-id
-                                value: "{{inputs.parameters.commit-id}}"
-                              - name: commit-message
-                                value: "{{inputs.parameters.commit-message}}"
-                              - name: commit-author
-                                value: "{{inputs.parameters.commit-author}}"
-                              - name: build-user
-                                value: "{{inputs.parameters.build-user}}"
-                              - name: workflow-namespace
-                                value: "{{inputs.parameters.workflow-namespace}}"
-                              - name: workflow-name
-                                value: "{{inputs.parameters.workflow-name}}"
-                              - name: workflow-status
-                                value: "{{inputs.parameters.workflow-status}}"
-                              - name: workflow-duration
-                                value: "{{inputs.parameters.workflow-duration}}"
-                              - name: workflow-start-time
-                                value: "{{inputs.parameters.workflow-start-time}}"
-                onExit: snciot-backend2-0-dingtalk-notify
-          parameters:
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.ref
-              dest: spec.arguments.parameters.0.value
-              transform:
-                expression: 'trimPrefix("refs/heads/", value)'
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.repository.git_http_url
-              dest: spec.arguments.parameters.1.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].message
-              dest: spec.arguments.parameters.2.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].id
-              dest: spec.arguments.parameters.3.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.project.name
-              dest: spec.arguments.parameters.4.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.ref
-              dest: spec.arguments.parameters.5.value
-              transform:
-                expression: 'trimPrefix("refs/heads/", value)'
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.user_username
-              dest: spec.arguments.parameters.6.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.repository.git_http_url
-              dest: spec.arguments.parameters.7.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].id
-              dest: spec.arguments.parameters.8.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].timestamp
-              dest: spec.arguments.parameters.9.value
-      transform:
-        - name: decode-gitlab-payload
-          transformer:
-            jq: |
-              .body = (.data | @base64d | fromjson)
-              .commits = if .body.commits != null and length(.body.commits) > 0 then .body.commits[0] else {} end
-              .body
-      policy:
-        status:
-          allow: [200, 201]
+                containers:
+                  - name: snciot-backend2-0-container
+                    image: busybox
+                    command: ["echo", "Triggered"]
+                restartPolicy: OnFailure
+  transform:
+    - name: decode-gitlab-payload
+      transformer:
+        jq: |
+          .body = .data  # 将原始 Webhook 数据放入 body 中
+          .commits = if .body.commits != null and length(.body.commits) > 0 then .body.commits[0] else {} end  # 获取 commits 数组中的第一个元素
+          .body  # 返回修改后的 body 数据
+
+    - name: print-webhook-event
+      transformer:
+        jq: |
+          # 输出 Webhook 事件的全部内容，帮助调试
+          .body = .data
+          .body  # 打印原始事件数据，用于调试和验证字段结构
