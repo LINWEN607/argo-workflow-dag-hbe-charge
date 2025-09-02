@@ -11,9 +11,9 @@ spec:
         targetPort: 12000
   gitlab:
     snciot-backend2-0:
-      # GitLab项目ID或路径
+      # GitLab项目ID或路径（使用完整路径格式）
       projects:
-        - "snciot_backend2-0"
+        - "lins/snciot_backend2-0"
       # GitLab webhook配置
       webhook:
         endpoint: /snciot_backend2-0
