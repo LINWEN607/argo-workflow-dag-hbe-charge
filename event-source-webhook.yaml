@@ -24,10 +24,6 @@ spec:
       # 监听的事件类型
       events:
         - PushEvents
-      # 访问令牌（用于GitLab API调用）
-      accessToken:
-        key: token
-        name: gitlab-access
       # webhook密钥（使用现有的gitlab-webhook-secret）
       secretToken:
         key: secretToken
