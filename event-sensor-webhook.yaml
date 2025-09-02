@@ -12,7 +12,7 @@ spec:
       eventName: snciot-backend2-0
       condition:
         expression: |
-          trimPrefix("refs/heads/", ref) in ["master", "50"]
+          trimPrefix("refs/heads/", body.ref) in ["master", "50"]
   triggers:
     - template:
         name: snciot-backend2-0-trigger
