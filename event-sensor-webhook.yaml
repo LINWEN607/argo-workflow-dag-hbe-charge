@@ -7,7 +7,7 @@ spec:
   template:
     serviceAccountName: argo
   dependencies:
-    - name: test-dep
+    - name: snciot-backend2-0-dep
       eventSourceName: gitlab-eventsource
       eventName: snciot-backend2-0
   triggers:
@@ -116,51 +116,51 @@ spec:
                 onExit: snciot-backend2-0-dingtalk-notify
           parameters:
             - src:
-                dependencyName: test-dep
+                dependencyName: snciot-backend2-0-dep
                 dataKey: ref
               dest: spec.arguments.parameters.0.value
               transform:
                 expression: "trimPrefix(\"refs/heads/\", value)"
             - src:
-                dependencyName: test-dep
+                dependencyName: snciot-backend2-0-dep
                 dataKey: repository.git_http_url
               dest: spec.arguments.parameters.1.value
             - src:
-                dependencyName: test-dep
+                dependencyName: snciot-backend2-0-dep
                 dataKey: commits[0].author.name
               dest: spec.arguments.parameters.2.value
             - src:
-                dependencyName: test-dep
+                dependencyName: snciot-backend2-0-dep
                 dataKey: commits[0].message
               dest: spec.arguments.parameters.3.value
             - src:
-                dependencyName: test-dep
+                dependencyName: snciot-backend2-0-dep
                 dataKey: after
               dest: spec.arguments.parameters.4.value
             - src:
-                dependencyName: test-dep
+                dependencyName: snciot-backend2-0-dep
                 dataKey: project.name
               dest: spec.arguments.parameters.5.value
             - src:
-                dependencyName: test-dep
+                dependencyName: snciot-backend2-0-dep
                 dataKey: ref
               dest: spec.arguments.parameters.6.value
               transform:
                 expression: "trimPrefix(\"refs/heads/\", value)"
             - src:
-                dependencyName: test-dep
+                dependencyName: snciot-backend2-0-dep
                 dataKey: user_username
               dest: spec.arguments.parameters.7.value
             - src:
-                dependencyName: test-dep
+                dependencyName: snciot-backend2-0-dep
                 dataKey: repository.git_http_url
               dest: spec.arguments.parameters.8.value
             - src:
-                dependencyName: test-dep
+                dependencyName: snciot-backend2-0-dep
                 dataKey: after
               dest: spec.arguments.parameters.9.value
             - src:
-                dependencyName: test-dep
+                dependencyName: snciot-backend2-0-dep
                 dataKey: commits[0].timestamp
               dest: spec.arguments.parameters.10.value
       policy:
