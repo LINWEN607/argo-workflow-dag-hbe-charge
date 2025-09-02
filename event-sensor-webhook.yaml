@@ -72,10 +72,6 @@ spec:
                                 value: "{{workflow.parameters.build-time}}"
                               - name: git-url
                                 value: "{{workflow.parameters.git-repo-url}}"
-                  - name: snciot-backend2-0-dingtalk-notify
-                    templateRef:
-                      name: snciot-backend2-0-dingtalk-notify-template
-                      template: snciot-backend2-0-dingtalk-notify
                 arguments:
                   parameters:
                     - name: branch
@@ -94,7 +90,7 @@ spec:
                     - name: workflow-status
                     - name: workflow-duration
                     - name: workflow-start-time
-                onExit: snciot-backend2-0-dingtalk-notify
+                onExit: snciot-backend2-0-dingtalk-notify-template
           parameters:
             - src:
                 dependencyName: snciot-backend2-0-dep
