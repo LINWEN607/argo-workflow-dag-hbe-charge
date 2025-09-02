@@ -75,21 +75,37 @@ spec:
                 arguments:
                   parameters:
                     - name: branch
+                      value: "master"
                     - name: git-repo-url
+                      value: ""
                     - name: commit-author
+                      value: "Unknown Author"
                     - name: commit-message
+                      value: "No commit message"
                     - name: commit-id
+                      value: "No commit ID"
                     - name: project-name
+                      value: "Unknown Project"
                     - name: target-branch
+                      value: "master"
                     - name: build-user
+                      value: "Unknown User"
                     - name: git-url
+                      value: ""
                     - name: git-commit
+                      value: "No commit ID"
                     - name: build-time
+                      value: "Unknown Timestamp"
                     - name: workflow-namespace
+                      value: "argo-cicd"
                     - name: workflow-name
+                      value: "snciot-backend2-0-workflow"
                     - name: workflow-status
+                      value: "Unknown"
                     - name: workflow-duration
+                      value: "0s"
                     - name: workflow-start-time
+                      value: "Unknown"
                 onExit: snciot-backend2-0-dingtalk-notify-template
           parameters:
             - src:
