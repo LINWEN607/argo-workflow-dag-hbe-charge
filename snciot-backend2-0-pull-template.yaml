@@ -50,6 +50,13 @@ spec:
             echo "Debug: Starting pull task"
             echo "Raw branch parameter: {{inputs.parameters.branch}}"
             echo "URL parameter: {{inputs.parameters.url}}"
+            
+            # 输出完整的参数值用于调试
+            echo "=== DEBUG EVENT PAYLOAD ==="
+            echo "Branch parameter type: $(echo "{{inputs.parameters.branch}}" | jq -r 'type' 2>/dev/null || echo 'not json')"
+            echo "Full branch parameter value:"
+            echo "{{inputs.parameters.branch}}" | jq . 2>/dev/null || echo "{{inputs.parameters.branch}}"
+            echo "=========================="
 
             # Extract branch name from full ref if needed
             BRANCH_NAME=$(echo "{{inputs.parameters.branch}}" | sed 's|refs/heads/||')
