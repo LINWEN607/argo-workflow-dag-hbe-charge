@@ -157,10 +157,13 @@ spec:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.repository.git_http_url
               dest: spec.arguments.parameters.1.value
+            # 修改下面的内容，避免在commits字段缺失时出错
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits[0].author.name
               dest: spec.arguments.parameters.2.value
+              transform:
+                expression: "if .body.commits != null and length(.body.commits) > 0 then .body.commits[0].author.name else \"Unknown Author\" end"
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits[0].message
@@ -200,7 +203,6 @@ spec:
           transformer:
             jq: |
               .body = (.data | @base64d | fromjson)
-              # 检查 commits 是否存在并提取
               .commits = if .body.commits != null and length(.body.commits) > 0 then .body.commits[0] else {} end
               .body
       policy:
