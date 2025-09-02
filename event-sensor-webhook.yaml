@@ -151,52 +151,57 @@ spec:
           parameters:
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataTemplate: "{{ decode(data) | jsonPath('body.ref') }}"
+                dataKey: body.ref
               dest: spec.arguments.parameters.0.value
               transform:
                 expression: "trimPrefix(\"refs/heads/\", value)"
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataTemplate: "{{ decode(data) | jsonPath('body.repository.git_http_url') }}"
+                dataKey: body.repository.git_http_url
               dest: spec.arguments.parameters.1.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataTemplate: "{{ decode(data) | jsonPath('body.commits[0].author.name') }}"
+                dataKey: body.commits[0].author.name
               dest: spec.arguments.parameters.2.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataTemplate: "{{ decode(data) | jsonPath('body.commits[0].message') }}"
+                dataKey: body.commits[0].message
               dest: spec.arguments.parameters.3.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataTemplate: "{{ decode(data) | jsonPath('body.commits[0].id') }}"
+                dataKey: body.commits[0].id
               dest: spec.arguments.parameters.4.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataTemplate: "{{ decode(data) | jsonPath('body.project.name') }}"
+                dataKey: body.project.name
               dest: spec.arguments.parameters.5.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataTemplate: "{{ decode(data) | jsonPath('body.ref') }}"
+                dataKey: body.ref
               dest: spec.arguments.parameters.6.value
               transform:
                 expression: "trimPrefix(\"refs/heads/\", value)"
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataTemplate: "{{ decode(data) | jsonPath('body.user_username') }}"
+                dataKey: body.user_username
               dest: spec.arguments.parameters.7.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataTemplate: "{{ decode(data) | jsonPath('body.repository.git_http_url') }}"
+                dataKey: body.repository.git_http_url
               dest: spec.arguments.parameters.8.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataTemplate: "{{ decode(data) | jsonPath('body.commits[0].id') }}"
+                dataKey: body.commits[0].id
               dest: spec.arguments.parameters.9.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataTemplate: "{{ decode(data) | jsonPath('body.commits[0].timestamp') }}"
+                dataKey: body.commits[0].timestamp
               dest: spec.arguments.parameters.10.value
+      transform:
+        - name: decode-gitlab-payload
+          transformer:
+            jq: |
+              .body = (.data | @base64d | fromjson)
       policy:
         status:
           allow: [200, 201]
