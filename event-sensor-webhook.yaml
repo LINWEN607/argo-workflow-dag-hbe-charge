@@ -31,43 +31,33 @@ spec:
                 arguments:
                   parameters:
                     - name: branch
-                      value: <branch>
+                      value: "{{inputs.parameters.ref}}"
                     - name: git-repo-url
-                      value: <git-repo-url>
+                      value: "{{inputs.parameters.repository.git_http_url}}"
                     - name: commit-author
-                      value: <commit-author>
+                      value: "{{inputs.parameters.commits.0.author.name}}"
                     - name: commit-message
-                      value: <commit-message>
+                      value: "{{inputs.parameters.commits.0.message}}"
                     - name: commit-id
-                      value: <commit-id>
+                      value: "{{inputs.parameters.after}}"
                     - name: project-name
-                      value: <project-name>
+                      value: "{{inputs.parameters.project.name}}"
                     - name: target-branch
-                      value: <target-branch>
+                      value: "{{inputs.parameters.ref}}"
                     - name: build-user
-                      value: <build-user>
-                    - name: duration
-                      value: <duration>
-                    - name: webhook-url
-                      value: <webhook-url>
-                    - name: secret-token
-                      value: <secret-token>
+                      value: "{{inputs.parameters.user_username}}"
                     - name: git-url
-                      value: <git-url>
+                      value: "{{inputs.parameters.repository.git_http_url}}"
                     - name: git-commit
-                      value: <git-commit>
+                      value: "{{inputs.parameters.after}}"
                     - name: build-time
-                      value: <build-time>
-                    - name: workflow-namespace
-                      value: "argo"
-                    - name: workflow-name
-                      value: "{{workflow.name}}"
+                      value: "{{inputs.parameters.commits.0.timestamp}}"
                 templates:
                   - name: snciot-backend2-0-pipeline
                     steps:
                       - - name: snciot-backend2-0-pull
                           templateRef:
-                            name: snciot-backend2-0-pipeline
+                            name: snciot-backend2-0-pull-template
                             template: snciot-backend2-0-pull
                           arguments:
                             parameters:
@@ -78,7 +68,7 @@ spec:
 
                       - - name: snciot-backend2-0-build
                           templateRef:
-                            name: snciot-backend2-0-pipeline
+                            name: snciot-backend2-0-build-template
                             template: snciot-backend2-0-build
                           arguments:
                             parameters:
@@ -87,7 +77,7 @@ spec:
 
                       - - name: snciot-backend2-0-deploy
                           templateRef:
-                            name: snciot-backend2-0-pipeline
+                            name: snciot-backend2-0-deploy-template
                             template: snciot-backend2-0-deploy
                           arguments:
                             parameters:
