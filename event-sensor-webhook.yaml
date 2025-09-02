@@ -31,152 +31,65 @@ spec:
                 arguments:
                   parameters:
                     - name: branch
-                      value: "{{inputs.parameters.ref}}"
                     - name: git-repo-url
-                      value: "{{inputs.parameters.repository.git_http_url}}"
                     - name: commit-author
-                      value: "{{inputs.parameters.commits.0.author.name}}"
                     - name: commit-message
-                      value: "{{inputs.parameters.commits.0.message}}"
                     - name: commit-id
-                      value: "{{inputs.parameters.after}}"
                     - name: project-name
-                      value: "{{inputs.parameters.project.name}}"
                     - name: target-branch
-                      value: "{{inputs.parameters.ref}}"
                     - name: build-user
-                      value: "{{inputs.parameters.user_username}}"
                     - name: git-url
-                      value: "{{inputs.parameters.repository.git_http_url}}"
                     - name: git-commit
-                      value: "{{inputs.parameters.after}}"
                     - name: build-time
-                      value: "{{inputs.parameters.commits.0.timestamp}}"
-                templates:
-                  - name: snciot-backend2-0-pipeline
-                    steps:
-                      - - name: snciot-backend2-0-pull
-                          templateRef:
-                            name: snciot-backend2-0-pull-template
-                            template: snciot-backend2-0-pull
-                          arguments:
-                            parameters:
-                              - name: branch
-                                value: "{{workflow.parameters.branch}}"
-                              - name: url
-                                value: "{{workflow.parameters.git-repo-url}}"
-
-                      - - name: snciot-backend2-0-build
-                          templateRef:
-                            name: snciot-backend2-0-build-template
-                            template: snciot-backend2-0-build
-                          arguments:
-                            parameters:
-                              - name: branch
-                                value: "{{workflow.parameters.branch}}"
-
-                      - - name: snciot-backend2-0-deploy
-                          templateRef:
-                            name: snciot-backend2-0-deploy-template
-                            template: snciot-backend2-0-deploy
-                          arguments:
-                            parameters:
-                              - name: target-branch
-                                value: "{{workflow.parameters.target-branch}}"
-                              - name: project-name
-                                value: "{{workflow.parameters.project-name}}"
-                              - name: git-commit
-                                value: "{{workflow.parameters.git-commit}}"
-                              - name: commit-message
-                                value: "{{workflow.parameters.commit-message}}"
-                              - name: build-time
-                                value: "{{workflow.parameters.build-time}}"
-                              - name: git-url
-                                value: "{{workflow.parameters.git-repo-url}}"
-
-                  - name: snciot-backend2-0-dingtalk-notify
-                    steps:
-                      - - name: notify
-                          templateRef:
-                            name: snciot-backend2-0-pipeline
-                            template: snciot-backend2-0-dingtalk-notify
-                          arguments:
-                            parameters:
-                              - name: project-name
-                                value: "{{workflow.parameters.project-name}}"
-                              - name: commit-id
-                                value: "{{workflow.parameters.commit-id}}"
-                              - name: commit-message
-                                value: "{{workflow.parameters.commit-message}}"
-                              - name: commit-author
-                                value: "{{workflow.parameters.commit-author}}"
-                              - name: build-user
-                                value: "{{workflow.parameters.build-user}}"
-                              - name: workflow-namespace
-                                value: "{{workflow.namespace}}"
-                              - name: workflow-name
-                                value: "{{workflow.name}}"
           parameters:
             - src:
                 dependencyName: webhook-snciot
-                dataKey: body.ref
+                dataKey: ref
               dest: spec.arguments.parameters.0.value
               transform:
                 expression: "trimPrefix(\"refs/heads/\", value)"
             - src:
                 dependencyName: webhook-snciot
-                dataKey: body.project.git_http_url
+                dataKey: repository.git_http_url
               dest: spec.arguments.parameters.1.value
             - src:
                 dependencyName: webhook-snciot
-                dataKey: body.commits[0].author.name
+                dataKey: commits[0].author.name
               dest: spec.arguments.parameters.2.value
             - src:
                 dependencyName: webhook-snciot
-                dataKey: body.commits[0].message
+                dataKey: commits[0].message
               dest: spec.arguments.parameters.3.value
             - src:
                 dependencyName: webhook-snciot
-                dataKey: body.commits[0].id
+                dataKey: after
               dest: spec.arguments.parameters.4.value
             - src:
                 dependencyName: webhook-snciot
-                dataKey: body.project.name
+                dataKey: project.name
               dest: spec.arguments.parameters.5.value
             - src:
                 dependencyName: webhook-snciot
-                dataKey: body.ref
+                dataKey: ref
               dest: spec.arguments.parameters.6.value
               transform:
                 expression: "trimPrefix(\"refs/heads/\", value)"
             - src:
                 dependencyName: webhook-snciot
-                dataKey: body.user_username
+                dataKey: user_username
               dest: spec.arguments.parameters.7.value
             - src:
                 dependencyName: webhook-snciot
-                dataKey: body.duration
+                dataKey: repository.git_http_url
               dest: spec.arguments.parameters.8.value
             - src:
                 dependencyName: webhook-snciot
-                dataKey: body.webhook_url
+                dataKey: after
               dest: spec.arguments.parameters.9.value
             - src:
                 dependencyName: webhook-snciot
-                dataKey: body.secret_token
+                dataKey: commits[0].timestamp
               dest: spec.arguments.parameters.10.value
-            - src:
-                dependencyName: webhook-snciot
-                dataKey: body.project.git_http_url
-              dest: spec.arguments.parameters.11.value
-            - src:
-                dependencyName: webhook-snciot
-                dataKey: body.after
-              dest: spec.arguments.parameters.12.value
-            - src:
-                dependencyName: webhook-snciot
-                dataKey: body.commits[0].timestamp
-              dest: spec.arguments.parameters.13.value
       policy:
         status:
           allow: [200, 201]
