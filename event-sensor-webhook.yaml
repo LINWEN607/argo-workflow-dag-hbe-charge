@@ -73,11 +73,45 @@ spec:
                               - name: git-url
                                 value: "{{workflow.parameters.git-repo-url}}"
                   - name: snciot-backend2-0-dingtalk-notify
+                    inputs:
+                      parameters:
+                        - name: project-name
+                        - name: commit-id
+                        - name: commit-message
+                        - name: commit-author
+                        - name: build-user
+                        - name: workflow-namespace
+                        - name: workflow-name
+                        - name: workflow-status
+                        - name: workflow-duration
+                        - name: workflow-start-time
                     steps:
                       - - name: notify
                           templateRef:
                             name: snciot-backend2-0-dingtalk-notify-template
                             template: snciot-backend2-0-dingtalk-notify
+                          arguments:
+                            parameters:
+                              - name: project-name
+                                value: "{{inputs.parameters.project-name}}"
+                              - name: commit-id
+                                value: "{{inputs.parameters.commit-id}}"
+                              - name: commit-message
+                                value: "{{inputs.parameters.commit-message}}"
+                              - name: commit-author
+                                value: "{{inputs.parameters.commit-author}}"
+                              - name: build-user
+                                value: "{{inputs.parameters.build-user}}"
+                              - name: workflow-namespace
+                                value: "{{inputs.parameters.workflow-namespace}}"
+                              - name: workflow-name
+                                value: "{{inputs.parameters.workflow-name}}"
+                              - name: workflow-status
+                                value: "{{inputs.parameters.workflow-status}}"
+                              - name: workflow-duration
+                                value: "{{inputs.parameters.workflow-duration}}"
+                              - name: workflow-start-time
+                                value: "{{inputs.parameters.workflow-start-time}}"
                 arguments:
                   parameters:
                     - name: branch
