@@ -106,7 +106,7 @@ spec:
                       value: "0s"
                     - name: workflow-start-time
                       value: "Unknown"
-                onExit: snciot-backend2-0-dingtalk-notify-template
+                onExit: snciot-backend2-0-dingtalk-notify
           parameters:
             - src:
                 dependencyName: snciot-backend2-0-dep
