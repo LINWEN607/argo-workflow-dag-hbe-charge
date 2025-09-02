@@ -45,7 +45,6 @@ spec:
                                 value: "{{workflow.parameters.branch}}"
                               - name: url
                                 value: "{{workflow.parameters.git-repo-url}}"
-
                       - - name: snciot-backend2-0-build
                           templateRef:
                             name: snciot-backend2-0-build-template
@@ -54,7 +53,6 @@ spec:
                             parameters:
                               - name: branch
                                 value: "{{workflow.parameters.branch}}"
-
                       - - name: snciot-backend2-0-deploy
                           templateRef:
                             name: snciot-backend2-0-deploy-template
@@ -202,6 +200,9 @@ spec:
           transformer:
             jq: |
               .body = (.data | @base64d | fromjson)
+              # 检查 commits 是否存在并提取
+              .commits = if .body.commits != null and length(.body.commits) > 0 then .body.commits[0] else {} end
+              .body
       policy:
         status:
           allow: [200, 201]
