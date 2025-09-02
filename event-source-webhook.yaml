@@ -32,4 +32,4 @@ spec:
       enableSSLVerification: false
       # Gitlab基础URL
       gitlabBaseURL: http://192.168.31.195
-      deleteHookOnFinish: true
+      deleteHookOnFinish: false
