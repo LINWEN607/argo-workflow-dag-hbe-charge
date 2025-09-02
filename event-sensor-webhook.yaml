@@ -111,40 +111,6 @@ spec:
                                 value: "{{inputs.parameters.workflow-duration}}"
                               - name: workflow-start-time
                                 value: "{{inputs.parameters.workflow-start-time}}"
-                arguments:
-                  parameters:
-                    - name: branch
-                      value: "master"
-                    - name: git-repo-url
-                      value: ""
-                    - name: commit-author
-                      value: "Unknown Author"
-                    - name: commit-message
-                      value: "No commit message"
-                    - name: commit-id
-                      value: "No commit ID"
-                    - name: project-name
-                      value: "Unknown Project"
-                    - name: target-branch
-                      value: "master"
-                    - name: build-user
-                      value: "Unknown User"
-                    - name: git-url
-                      value: ""
-                    - name: git-commit
-                      value: "No commit ID"
-                    - name: build-time
-                      value: "Unknown Timestamp"
-                    - name: workflow-namespace
-                      value: "argo-cicd"
-                    - name: workflow-name
-                      value: "snciot-backend2-0-workflow"
-                    - name: workflow-status
-                      value: "Unknown"
-                    - name: workflow-duration
-                      value: "0s"
-                    - name: workflow-start-time
-                      value: "Unknown"
                 onExit: snciot-backend2-0-dingtalk-notify
           parameters:
             - src:
@@ -152,18 +118,17 @@ spec:
                 dataKey: body.ref
               dest: spec.arguments.parameters.0.value
               transform:
-                expression: "trimPrefix(\"refs/heads/\", value)"
+                expression: 'trimPrefix("refs/heads/", value)'
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.repository.git_http_url
               dest: spec.arguments.parameters.1.value
-            # 修改下面的内容，避免在commits字段缺失时出错
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits[0].author.name
               dest: spec.arguments.parameters.2.value
               transform:
-                expression: "if .body.commits != null and length(.body.commits) > 0 then .body.commits[0].author.name else \"Unknown Author\" end"
+                expression: 'if .body.commits != null and length(.body.commits) > 0 and .body.commits[0].author != null and .body.commits[0].author.name != null then .body.commits[0].author.name else "Unknown Author" end'
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits[0].message
@@ -181,7 +146,7 @@ spec:
                 dataKey: body.ref
               dest: spec.arguments.parameters.6.value
               transform:
-                expression: "trimPrefix(\"refs/heads/\", value)"
+                expression: 'trimPrefix("refs/heads/", value)'
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.user_username
