@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Sensor
 metadata:
-  name: sample-eventsensor
+  name: gitlab
   namespace: argo-cicd
 spec:
   template:
@@ -11,7 +11,6 @@ spec:
       eventSourceName: gitlab-eventsource
       eventName: snciot-backend2-0
   triggers:
-
     - template:
         name: snciot-backend2-0-trigger
         argoWorkflow:
