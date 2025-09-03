@@ -158,7 +158,6 @@ spec:
           transformer:
             jq: |
               .body = (.data | @base64d | fromjson)
-              .commits = if .body.commits != null and length(.body.commits) > 0 then .body.commits[0] else {} end
               .body
 
         - name: print-webhook-event
