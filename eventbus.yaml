@@ -7,11 +7,10 @@ spec:
   nats:
     native:
       replicas: 1
-      auth:
-        token: token # 必须显式指定 Token
+      auth: token
       volumeClaimTemplates:
         - metadata:
-            name: stan-pv-0 # 引用现有 PVC 名称
+            name: stan-pv-0
           spec:
             accessModes:
               - ReadWriteOnce
