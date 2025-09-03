@@ -159,11 +159,11 @@ spec:
               dest: spec.arguments.parameters.1.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].message
+                dataKey: body.commits[-1].message
               dest: spec.arguments.parameters.2.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].id
+                dataKey: body.commits[-1].id
               dest: spec.arguments.parameters.3.value
             - src:
                 dependencyName: snciot-backend2-0-dep
@@ -185,16 +185,16 @@ spec:
               dest: spec.arguments.parameters.7.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].id
+                dataKey: body.commits[-1].id
               dest: spec.arguments.parameters.8.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].timestamp
+                dataKey: body.commits[-1].timestamp
               dest: spec.arguments.parameters.9.value
             # 为新增的参数添加映射
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].author.name
+                dataKey: body.commits[-1].author.name
               dest: spec.arguments.parameters.10.value
             - src:
                 dependencyName: snciot-backend2-0-dep
@@ -202,11 +202,11 @@ spec:
               dest: spec.arguments.parameters.11.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].id
+                dataKey: body.commits[-1].id
               dest: spec.arguments.parameters.12.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].message
+                dataKey: body.commits[-1].message
               dest: spec.arguments.parameters.13.value
             - src:
                 dependencyName: snciot-backend2-0-dep
@@ -214,11 +214,11 @@ spec:
               dest: spec.arguments.parameters.14.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].timestamp
+                dataKey: body.commits[-1].timestamp
               dest: spec.arguments.parameters.15.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].timestamp
+                dataKey: body.commits[-1].timestamp
               dest: spec.arguments.parameters.16.value
       policy:
         status:
