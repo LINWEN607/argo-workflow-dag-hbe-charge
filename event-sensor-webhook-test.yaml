@@ -121,11 +121,11 @@ spec:
               dest: spec.arguments.parameters.1.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.head_commit.message
+                dataKey: body.commits[0].message
               dest: spec.arguments.parameters.2.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.after
+                dataKey: body.commits[0].id
               dest: spec.arguments.parameters.3.value
             - src:
                 dependencyName: snciot-backend2-0-dep
@@ -147,50 +147,33 @@ spec:
               dest: spec.arguments.parameters.7.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.after
+                dataKey: body.commits[0].id
               dest: spec.arguments.parameters.8.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.head_commit.timestamp
+                dataKey: body.commits[0].timestamp
               dest: spec.arguments.parameters.9.value
+      # 在参数部分之后添加调试用参数
+      parameters:
+        # 先添加一个调试参数，输出整个body内容
+        - src:
+            dependencyName: snciot-backend2-0-dep
+            dataKey: debug_event
+            useRawData: true
+          dest: spec.arguments.parameters.10.value
       transform:
         - name: decode-gitlab-payload
           transformer:
             jq: |
               .body = (.data | @base64d | fromjson)
               .body
-
         - name: print-webhook-event
           transformer:
             jq: |
               # 输出 Webhook 事件的全部内容，帮助调试
               .body = (.data | @base64d | fromjson)
-              .body  # 打印原始事件数据，用于调试和验证字段结构
-              
-              # 调试信息：检查body是否存在以及其类型
-              .debug_body_exists = (.body != null)
-              .debug_body_type = (.body | type)
-              
-              # 调试信息：检查commits字段
-              if .body.commits == null then
-                .debug_commits = "commits is null"
-              else
-                .debug_commits = "commits exists, type: " + (.body.commits | type)
-                if (.body.commits | type) == "array" then
-                  .debug_commits_count = (.body.commits | length)
-                else
-                  .debug_commits_detail = .body.commits
-                end
-              end
-              
-              # 调试信息：检查其他关键字段
-              .debug_ref_exists = (.body.ref != null)
-              .debug_project_exists = (.body.project != null)
-              .debug_head_commit_exists = (.body.head_commit != null)
-              .debug_after_exists = (.body.after != null)
-              
-              .body
-
+              .debug_event = .body  # 将解码后的事件保存到 debug_event 字段
+              .
       policy:
         status:
           allow: [200, 201]
