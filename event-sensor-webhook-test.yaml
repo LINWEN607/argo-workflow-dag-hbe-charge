@@ -11,45 +11,6 @@ spec:
       eventSourceName: gitlab-eventsource
       eventName: snciot-backend2-0
   triggers:
-    # 添加一个用于输出完整事件载荷的触发器
-    - template:
-        name: payload-dump-trigger
-        conditions: "snciot-backend2-0-dep"
-        k8s:
-          operation: create
-          source:
-            resource:
-              apiVersion: v1
-              kind: Pod
-              metadata:
-                generateName: event-payload-dump-
-                namespace: argo-cicd
-              spec:
-                restartPolicy: Never
-                containers:
-                  - name: payload-dump
-                    image: busybox
-                    command: 
-                      - sh
-                      - -c
-                      - |
-                        echo "=== Full Event Payload ==="
-                        echo "BODY:"
-                        echo '{{ args }}' | jq '.body'
-                        echo "HEADERS:"
-                        echo '{{ args }}' | jq '.headers'
-                        echo "=== End of Payload ==="
-                    resources:
-                      limits:
-                        memory: 128Mi
-                        cpu: 100m
-          parameters:
-            - src:
-                dependencyName: snciot-backend2-0-dep
-              dest: spec.containers.0.command.2
-      policy:
-        status:
-          allow: [200, 201]
     - template:
         name: snciot-backend2-0-trigger
         argoWorkflow:
