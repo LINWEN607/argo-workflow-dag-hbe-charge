@@ -50,6 +50,18 @@ spec:
                       value: "default-commit-id"
                     - name: build-time
                       value: "default-timestamp"
+                    - name: commit-author
+                      value: "default-author"
+                    - name: workflow-namespace
+                      value: "argo-cicd"
+                    - name: workflow-name
+                      value: "default-workflow"
+                    - name: workflow-status
+                      value: "default-status"
+                    - name: workflow-duration
+                      value: "0s"
+                    - name: workflow-start-time
+                      value: "default-start-time"
                 templates:
                   - name: snciot-backend2-0-sensor-pipeline
                     steps:
@@ -161,6 +173,25 @@ spec:
             - src:
                 dependencyName: snciot-backend2-0-dep
               dest: spec.arguments.parameters.9.value
+            # 为新增的参数添加映射
+            - src:
+                dependencyName: snciot-backend2-0-dep
+              dest: spec.arguments.parameters.10.value
+            - src:
+                dependencyName: snciot-backend2-0-dep
+              dest: spec.arguments.parameters.11.value
+            - src:
+                dependencyName: snciot-backend2-0-dep
+              dest: spec.arguments.parameters.12.value
+            - src:
+                dependencyName: snciot-backend2-0-dep
+              dest: spec.arguments.parameters.13.value
+            - src:
+                dependencyName: snciot-backend2-0-dep
+              dest: spec.arguments.parameters.14.value
+            - src:
+                dependencyName: snciot-backend2-0-dep
+              dest: spec.arguments.parameters.15.value
       policy:
         status:
           allow: [200, 201]
