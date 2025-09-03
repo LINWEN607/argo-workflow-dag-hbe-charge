@@ -43,3 +43,7 @@ spec:
         - name: build-time
           valueFrom:
             event: body.commits[0].timestamp
+        # 添加缺失的参数
+        - name: commit-author
+          valueFrom:
+            event: body.commits[0].author.name
