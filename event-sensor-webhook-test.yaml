@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Sensor
 metadata:
-  name: gitlab
+  name: webhook
   namespace: argo-cicd
 spec:
   template:
