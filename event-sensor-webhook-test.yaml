@@ -11,6 +11,10 @@ spec:
       eventSourceName: gitlab-eventsource
       eventName: snciot-backend2-0
   triggers:
+    # 添加一个日志记录trigger来查看原始事件数据
+    - template:
+        name: log-trigger
+        log: {}
     - template:
         name: snciot-backend2-0-trigger
         argoWorkflow:
@@ -50,6 +54,7 @@ spec:
                       value: "default-commit-id"
                     - name: build-time
                       value: "default-timestamp"
+                    # 添加缺少的参数及其默认值
                     - name: commit-author
                       value: "default-author"
                     - name: workflow-namespace
@@ -75,6 +80,7 @@ spec:
                                 value: "{{workflow.parameters.branch}}"
                               - name: url
                                 value: "{{workflow.parameters.git-repo-url}}"
+
                       - - name: snciot-backend2-0-build
                           templateRef:
                             name: snciot-backend2-0-build-template
@@ -83,6 +89,7 @@ spec:
                             parameters:
                               - name: branch
                                 value: "{{workflow.parameters.branch}}"
+
                       - - name: snciot-backend2-0-deploy
                           templateRef:
                             name: snciot-backend2-0-deploy-template
