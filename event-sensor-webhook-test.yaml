@@ -11,10 +11,7 @@ spec:
       eventSourceName: gitlab-eventsource
       eventName: snciot-backend2-0
   triggers:
-    # 添加一个日志记录trigger来查看原始事件数据
-    - template:
-        name: log-trigger
-        log: {}
+
     - template:
         name: snciot-backend2-0-trigger
         argoWorkflow:
@@ -35,38 +32,21 @@ spec:
                 arguments:
                   parameters:
                     - name: branch
-                      value: ""
                     - name: git-repo-url
-                      value: ""
                     - name: commit-message
-                      value: "Default commit message"
                     - name: commit-id
-                      value: "default-commit-id"
                     - name: project-name
-                      value: ""
                     - name: target-branch
-                      value: ""
                     - name: build-user
-                      value: "default-user"
                     - name: git-url
-                      value: ""
                     - name: git-commit
-                      value: "default-commit-id"
                     - name: build-time
-                      value: "default-timestamp"
-                    # 添加缺少的参数及其默认值
                     - name: commit-author
-                      value: "default-author"
                     - name: workflow-namespace
-                      value: "argo-cicd"
                     - name: workflow-name
-                      value: "default-workflow"
                     - name: workflow-status
-                      value: "default-status"
                     - name: workflow-duration
-                      value: "0s"
                     - name: workflow-start-time
-                      value: "default-start-time"
                 templates:
                   - name: snciot-backend2-0-sensor-pipeline
                     steps:
@@ -152,53 +132,77 @@ spec:
           parameters:
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.ref
               dest: spec.arguments.parameters.0.value
+              transform:
+                expression: 'trimPrefix("refs/heads/", value)'
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.project.git_http_url
               dest: spec.arguments.parameters.1.value
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.commits[0].message
               dest: spec.arguments.parameters.2.value
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.commits[0].id
               dest: spec.arguments.parameters.3.value
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.project.name
               dest: spec.arguments.parameters.4.value
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.ref
               dest: spec.arguments.parameters.5.value
+              transform:
+                expression: 'trimPrefix("refs/heads/", value)'
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.user_username
               dest: spec.arguments.parameters.6.value
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.project.git_http_url
               dest: spec.arguments.parameters.7.value
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.commits[0].id
               dest: spec.arguments.parameters.8.value
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.commits[0].timestamp
               dest: spec.arguments.parameters.9.value
             # 为新增的参数添加映射
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.commits[0].author.name
               dest: spec.arguments.parameters.10.value
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.project.name
               dest: spec.arguments.parameters.11.value
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.commits[0].id
               dest: spec.arguments.parameters.12.value
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.commits[0].message
               dest: spec.arguments.parameters.13.value
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.user_username
               dest: spec.arguments.parameters.14.value
             - src:
                 dependencyName: snciot-backend2-0-dep
+                dataKey: body.commits[0].timestamp
               dest: spec.arguments.parameters.15.value
+            - src:
+                dependencyName: snciot-backend2-0-dep
+                dataKey: body.commits[0].timestamp
+              dest: spec.arguments.parameters.16.value
       policy:
         status:
           allow: [200, 201]
