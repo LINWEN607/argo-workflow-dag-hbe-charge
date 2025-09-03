@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Sensor
 metadata:
-  name: gitlab
+  name: sample-eventsensor
   namespace: argo-cicd
 spec:
   template:
@@ -11,6 +11,45 @@ spec:
       eventSourceName: gitlab-eventsource
       eventName: snciot-backend2-0
   triggers:
+    # 添加一个用于输出完整事件载荷的触发器
+    - template:
+        name: payload-dump-trigger
+        conditions: "snciot-backend2-0-dep"
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                generateName: event-payload-dump-
+                namespace: argo-cicd
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: payload-dump
+                    image: busybox
+                    command: 
+                      - sh
+                      - -c
+                      - |
+                        echo "=== Full Event Payload ==="
+                        echo "BODY:"
+                        echo '{{ args }}' | jq '.body'
+                        echo "HEADERS:"
+                        echo '{{ args }}' | jq '.headers'
+                        echo "=== End of Payload ==="
+                    resources:
+                      limits:
+                        memory: 128Mi
+                        cpu: 100m
+          parameters:
+            - src:
+                dependencyName: snciot-backend2-0-dep
+              dest: spec.containers.0.command.2
+      policy:
+        status:
+          allow: [200, 201]
     - template:
         name: snciot-backend2-0-trigger
         argoWorkflow:
@@ -31,21 +70,37 @@ spec:
                 arguments:
                   parameters:
                     - name: branch
+                      value: ""
                     - name: git-repo-url
+                      value: ""
                     - name: commit-message
+                      value: ""
                     - name: commit-id
+                      value: ""
                     - name: project-name
+                      value: ""
                     - name: target-branch
+                      value: ""
                     - name: build-user
+                      value: ""
                     - name: git-url
+                      value: ""
                     - name: git-commit
+                      value: ""
                     - name: build-time
+                      value: ""
                     - name: commit-author
+                      value: ""
                     - name: workflow-namespace
+                      value: ""
                     - name: workflow-name
+                      value: ""
                     - name: workflow-status
+                      value: ""
                     - name: workflow-duration
+                      value: ""
                     - name: workflow-start-time
+                      value: ""
                 templates:
                   - name: snciot-backend2-0-sensor-pipeline
                     steps:
@@ -141,12 +196,16 @@ spec:
               dest: spec.arguments.parameters.1.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].message
+                dataKey: body.commits
               dest: spec.arguments.parameters.2.value
+              transform:
+                expression: 'len(value) > 0 ? value[0].message : "No commit message"'
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].id
+                dataKey: body.commits
               dest: spec.arguments.parameters.3.value
+              transform:
+                expression: 'len(value) > 0 ? value[0].id : "No commit id"'
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.project.name
@@ -167,41 +226,55 @@ spec:
               dest: spec.arguments.parameters.7.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].id
+                dataKey: body.commits
               dest: spec.arguments.parameters.8.value
+              transform:
+                expression: 'len(value) > 0 ? value[0].id : "No commit id"'
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].timestamp
+                dataKey: body.commits
               dest: spec.arguments.parameters.9.value
+              transform:
+                expression: 'len(value) > 0 ? value[0].timestamp : "No timestamp"'
             # 为新增的参数添加映射
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].author.name
+                dataKey: body.commits
               dest: spec.arguments.parameters.10.value
+              transform:
+                expression: 'len(value) > 0 ? value[0].author.name : "Unknown author"'
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.project.name
               dest: spec.arguments.parameters.11.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].id
+                dataKey: body.commits
               dest: spec.arguments.parameters.12.value
+              transform:
+                expression: 'len(value) > 0 ? value[0].id : "No commit id"'
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].message
+                dataKey: body.commits
               dest: spec.arguments.parameters.13.value
+              transform:
+                expression: 'len(value) > 0 ? value[0].message : "No commit message"'
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.user_username
               dest: spec.arguments.parameters.14.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].timestamp
+                dataKey: body.commits
               dest: spec.arguments.parameters.15.value
+              transform:
+                expression: 'len(value) > 0 ? value[0].timestamp : "No timestamp"'
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].timestamp
+                dataKey: body.commits
               dest: spec.arguments.parameters.16.value
+              transform:
+                expression: 'len(value) > 0 ? value[0].timestamp : "No timestamp"'
       policy:
         status:
           allow: [200, 201]
