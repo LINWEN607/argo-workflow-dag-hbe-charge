@@ -5,7 +5,7 @@ metadata:
   namespace: argo-cicd
 spec:
   event:
-    selector: metadata.name == "snciot-backend2-0" && (body.ref == "refs/heads/master" || body.ref == "refs/heads/50")
+    selector: true
   submit:
     workflowTemplateRef:
       name: snciot-backend2-0-pipeline
