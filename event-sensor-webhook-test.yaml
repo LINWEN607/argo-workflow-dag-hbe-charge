@@ -121,11 +121,11 @@ spec:
               dest: spec.arguments.parameters.1.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].message
+                dataKey: body.head_commit.message
               dest: spec.arguments.parameters.2.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].id
+                dataKey: body.after
               dest: spec.arguments.parameters.3.value
             - src:
                 dependencyName: snciot-backend2-0-dep
@@ -147,11 +147,11 @@ spec:
               dest: spec.arguments.parameters.7.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].id
+                dataKey: body.after
               dest: spec.arguments.parameters.8.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits[0].timestamp
+                dataKey: body.head_commit.timestamp
               dest: spec.arguments.parameters.9.value
       transform:
         - name: decode-gitlab-payload
@@ -166,6 +166,30 @@ spec:
               # 输出 Webhook 事件的全部内容，帮助调试
               .body = (.data | @base64d | fromjson)
               .body  # 打印原始事件数据，用于调试和验证字段结构
+              
+              # 调试信息：检查body是否存在以及其类型
+              .debug_body_exists = (.body != null)
+              .debug_body_type = (.body | type)
+              
+              # 调试信息：检查commits字段
+              if .body.commits == null then
+                .debug_commits = "commits is null"
+              else
+                .debug_commits = "commits exists, type: " + (.body.commits | type)
+                if (.body.commits | type) == "array" then
+                  .debug_commits_count = (.body.commits | length)
+                else
+                  .debug_commits_detail = .body.commits
+                end
+              end
+              
+              # 调试信息：检查其他关键字段
+              .debug_ref_exists = (.body.ref != null)
+              .debug_project_exists = (.body.project != null)
+              .debug_head_commit_exists = (.body.head_commit != null)
+              .debug_after_exists = (.body.after != null)
+              
+              .body
 
       policy:
         status:
