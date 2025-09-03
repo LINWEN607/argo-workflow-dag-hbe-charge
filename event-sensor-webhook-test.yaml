@@ -159,16 +159,12 @@ spec:
               dest: spec.arguments.parameters.1.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
+                dataKey: body.commits[0].message
               dest: spec.arguments.parameters.2.value
-              transform:
-                expression: 'len(value) > 0 ? value[0].message : "No commit message"'
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
+                dataKey: body.commits[0].id
               dest: spec.arguments.parameters.3.value
-              transform:
-                expression: 'len(value) > 0 ? value[0].id : "No commit id"'
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.project.name
@@ -189,55 +185,41 @@ spec:
               dest: spec.arguments.parameters.7.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
+                dataKey: body.commits[0].id
               dest: spec.arguments.parameters.8.value
-              transform:
-                expression: 'len(value) > 0 ? value[0].id : "No commit id"'
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
+                dataKey: body.commits[0].timestamp
               dest: spec.arguments.parameters.9.value
-              transform:
-                expression: 'len(value) > 0 ? value[0].timestamp : "No timestamp"'
             # 为新增的参数添加映射
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
+                dataKey: body.commits[0].author.name
               dest: spec.arguments.parameters.10.value
-              transform:
-                expression: 'len(value) > 0 ? value[0].author.name : "Unknown author"'
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.project.name
               dest: spec.arguments.parameters.11.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
+                dataKey: body.commits[0].id
               dest: spec.arguments.parameters.12.value
-              transform:
-                expression: 'len(value) > 0 ? value[0].id : "No commit id"'
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
+                dataKey: body.commits[0].message
               dest: spec.arguments.parameters.13.value
-              transform:
-                expression: 'len(value) > 0 ? value[0].message : "No commit message"'
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.user_username
               dest: spec.arguments.parameters.14.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
+                dataKey: body.commits[0].timestamp
               dest: spec.arguments.parameters.15.value
-              transform:
-                expression: 'len(value) > 0 ? value[0].timestamp : "No timestamp"'
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
+                dataKey: body.commits[0].timestamp
               dest: spec.arguments.parameters.16.value
-              transform:
-                expression: 'len(value) > 0 ? value[0].timestamp : "No timestamp"'
       policy:
         status:
           allow: [200, 201]
