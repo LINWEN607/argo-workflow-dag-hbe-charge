@@ -8,6 +8,10 @@ spec:
     native:
       replicas: 1
       auth: token
+      # 新增 Pod 标签
+      podMetadata:
+        labels:
+          controller: eventbus-controller
       volumeClaimTemplates:
         - metadata:
             name: stan-pv-0
