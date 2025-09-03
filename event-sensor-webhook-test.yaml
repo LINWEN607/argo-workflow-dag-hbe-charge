@@ -101,6 +101,8 @@ spec:
                       value: ""
                     - name: workflow-start-time
                       value: ""
+                    - name: additional-param
+                      value: ""
                 templates:
                   - name: snciot-backend2-0-sensor-pipeline
                     steps:
