@@ -17,6 +17,9 @@ rules:
       - eventbus
       - eventbus/finalizers
       - eventbus/status
+      - workfloweventbindings
+      - workfloweventbindings/finalizers
+      - workfloweventbindings/status
       - workflowtemplates
       - workflows
       - workflowtaskresults
