@@ -134,29 +134,6 @@ spec:
                 ;;
             esac
 
-            # 使用 Python 解析和格式化时间
-            if [ -n "$WORKFLOW_START_TIME" ]; then
-              # 使用 Python 转换时间格式 (UTC 到 Asia/Shanghai)
-              TIMESTAMP=$(python3 -c "
-            import datetime
-            try:
-                # 解析 UTC 时间
-                utc_time = datetime.datetime.strptime('$WORKFLOW_START_TIME', '%Y-%m-%dT%H:%M:%SZ')
-                # 添加时区信息并转换为上海时区
-                utc_time = utc_time.replace(tzinfo=datetime.timezone.utc)
-                shanghai_time = utc_time.astimezone(datetime.timezone(datetime.timedelta(hours=8)))
-                print(shanghai_time.strftime('%Y-%m-%d %H:%M:%S'))
-            except Exception as e:
-                print('$WORKFLOW_START_TIME')
-            " 2>/dev/null || echo "$WORKFLOW_START_TIME")
-            else
-              TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
-            fi
-
-            echo "Debug: Time calculation results"
-            echo "WORKFLOW_START_TIME: $WORKFLOW_START_TIME"
-            echo "TIMESTAMP: $TIMESTAMP"
-
             # 构建消息内容
             MESSAGE="### $STATUS_TEXT\n\n- **项目名称**：$PROJECT_NAME\n- **任务名称**：$WORKFLOW_NAME\n- **构建服务**：前端Vite项目\n- **任务状态**：$STATUS_TEXT\n- **任务持续时间**：$WORKFLOW_DURATION\n- **Commit ID**：$COMMIT_ID\n- **Commit 信息**：$COMMIT_MESSAGE\n- **修改人**：$COMMIT_AUTHOR\n\n> 构建时间：$TIMESTAMP\n> 构建人：$BUILD_USER\n\n**操作建议**："
 
