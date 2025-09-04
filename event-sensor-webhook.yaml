@@ -138,13 +138,13 @@ spec:
                               - name: workflow-namespace
                                 value: "{{inputs.parameters.workflow-namespace}}"
                               - name: workflow-name
-                                value: "{{workflow.name}}"
+                                value: "{{inputs.parameters.workflow-name}}"
                               - name: workflow-status
-                                value: "{{workflow.status}}"
+                                value: "{{inputs.parameters.workflow-status}}"
                               - name: workflow-duration
-                                value: "{{workflow.duration}}"
+                                value: "{{inputs.parameters.workflow-duration}}"
                               - name: workflow-start-time
-                                value: "{{workflow.startedAt}}"
+                                value: "{{inputs.parameters.workflow-start-time}}"
                 onExit: snciot-backend2-0-dingtalk-notify
           parameters:
             - src:
