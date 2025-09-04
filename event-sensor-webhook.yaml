@@ -159,16 +159,14 @@ spec:
               dest: spec.arguments.parameters.1.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
+                dataKey: body
               dest: spec.arguments.parameters.2.value
-              transform:
-                expression: 'value[0].message'
+              dataTemplate: " {{ .commits[0].message}} "
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
+                dataKey: body
               dest: spec.arguments.parameters.3.value
-              transform:
-                expression: 'value[0].id'
+              dataTemplate: " {{ .commits[0].id}} "
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.project.name
@@ -189,23 +187,20 @@ spec:
               dest: spec.arguments.parameters.7.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
+                dataKey: body
               dest: spec.arguments.parameters.8.value
-              transform:
-                expression: 'value[0].id'
+              dataTemplate: " {{ .commits[0].id}} "
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
+                dataKey: body
               dest: spec.arguments.parameters.9.value
-              transform:
-                expression: 'value[0].timestamp'
+              dataTemplate: " {{ .commits[0].timestamp}} "
             # 为新增的参数添加映射
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
+                dataKey: body
               dest: spec.arguments.parameters.10.value
-              transform:
-                expression: 'value[0].author.name'
+              dataTemplate: " {{ .commits[0].author.name}} "
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.project.name
