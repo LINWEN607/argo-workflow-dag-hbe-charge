@@ -52,7 +52,7 @@ spec:
 
             TARGET_BRANCH="{{inputs.parameters.target-branch}}"
             PROJECT_NAME="{{inputs.parameters.project-name}}"
-            GIT_COMMIT=\"{{inputs.parameters.git-commit}}\"
+            GIT_COMMIT= "{{inputs.parameters.git-commit}}"
             COMMIT_MESSAGE="{{inputs.parameters.commit-message}}"
             BUILD_TIME="{{inputs.parameters.build-time}}"
             GIT_URL="{{inputs.parameters.git-url}}"
