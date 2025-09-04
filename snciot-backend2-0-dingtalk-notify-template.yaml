@@ -40,6 +40,16 @@ spec:
             value: "{{inputs.parameters.commit-author}}"
           - name: BUILD_USER
             value: "{{inputs.parameters.build-user}}"
+          - name: WORKFLOW_NAME
+            value: "{{inputs.parameters.workflow-name}}"
+          - name: WORKFLOW_NAMESPACE
+            value: "{{inputs.parameters.workflow-namespace}}"
+          - name: WORKFLOW_STATUS
+            value: "{{inputs.parameters.workflow-status}}"
+          - name: WORKFLOW_DURATION
+            value: "{{inputs.parameters.workflow-duration}}"
+          - name: WORKFLOW_START_TIME
+            value: "{{inputs.parameters.workflow-start-time}}"
           - name: TZ
             value: "Asia/Shanghai"
         command: ["/bin/sh", "-c"]
