@@ -178,30 +178,6 @@ spec:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.project.name
               dest: spec.arguments.parameters.11.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.project.name
-              dest: spec.templates.inputs.parameters.0.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits.0.id
-              dest: spec.templates.inputs.parameters.1.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits.0.message
-              dest: spec.templates.inputs.parameters.2.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits.0.author.name
-              dest: spec.templates.inputs.parameters.3.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.user_username
-              dest: spec.templates.inputs.parameters.4.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.project.name
-              dest: spec.templates.inputs.parameters.5.value
       policy:
         status:
           allow: [200, 201]
