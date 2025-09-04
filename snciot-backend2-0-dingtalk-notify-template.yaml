@@ -18,6 +18,7 @@ spec:
           - name: build-user
           - name: workflow-namespace
           - name: workflow-name
+            value: "{{workflow.name}}"
           - name: workflow-status
             value: "{{workflow.status}}"
           - name: workflow-duration
