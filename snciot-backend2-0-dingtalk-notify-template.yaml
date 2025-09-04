@@ -17,10 +17,6 @@ spec:
           - name: commit-author
           - name: build-user
           - name: workflow-namespace
-          - name: workflow-name
-          - name: workflow-status
-          - name: workflow-duration
-          - name: workflow-start-time
       container:
         image: docker.io/library/dingtalk-notify:latest
         imagePullPolicy: IfNotPresent
