@@ -72,7 +72,7 @@ spec:
             echo "Debug: TARGET_BRANCH=$TARGET_BRANCH"
             echo "Debug: BRANCH_NAME=$BRANCH_NAME"
             echo "Debug: PROJECT_NAME=$PROJECT_NAME"
-            echo "Debug: GIT_COMMIT=$GIT_COMMIT"
+            printf "Debug: GIT_COMMIT=%s\n" "$GIT_COMMIT"
             echo "Debug: BUILD_TIME=$BUILD_TIME"
             echo "Debug: GIT_URL=$GIT_URL"
 
