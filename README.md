@@ -1,6 +1,6 @@
 # Argo Workflow CI/CD 项目说明
 
-本项目基于 Argo Workflows 实现一套完整的 CI/CD 流水线，用于自动化构建和部署应用。
+本项目基于 Argo Workflows 实现一套完整的 CI/CD 流水线，用于自动化构建和部署 snciot-backend2-0 应用。项目使用 GitLab Webhook 触发流水线，包含代码拉取、构建、部署和通知等完整流程。
 
 ## 项目结构
 
@@ -12,7 +12,7 @@
 ├── snciot-backend2-0-pull-template.yaml     # 代码拉取模板
 ├── snciot-backend2-0-build-template.yaml    # 构建模板
 ├── snciot-backend2-0-deploy-template.yaml   # 部署模板
-├── snciot-backend2-0-dingtalk-notify-template.yaml  # 钉钉通模板
+├── snciot-backend2-0-dingtalk-notify-template.yaml  # 钉钉通知模板
 ├── dingtalk-webhook-secret.yaml        # 钉钉 Webhook 密钥
 ├── deployment-ssh-keys.yaml            # 部署 SSH 密钥
 ├── gitlab-pull-secret.yaml             # GitLab 拉取代碼密钥
@@ -20,7 +20,18 @@
 ├── event-source-webhook-service.yaml   # Webhook 服务配置
 ├── eventbus.yaml                       # EventBus配置
 └── pvc.yaml                            # 持久卷声明
-env
+env/
+├── argo-workflow-ingress.yaml          # Ingress 配置
+├── deployment-ssh-keys.yaml            # 部署 SSH 密钥
+├── dingtalk-webhook-secret.yaml        # 钉钉 Webhook 密钥
+├── event-source-webhook-service.yaml   # Webhook 服务配置
+├── gitlab-access-secret.yaml           # GitLab 访问令牌
+├── gitlab-pull-secret.yaml             # GitLab 拉取密钥
+├── gitlab-webhook-secret.yaml          # GitLab Webhook 密钥
+├── rbac.yaml                           # RBAC 权限配置
+├── serviceaccount.yaml                 # ServiceAccount 配置
+├── shared-data-pvc.yaml                # 共享数据 PVC 配置
+└── stan-pv-0-pvc.yaml                  # EventBus PVC 配置
 ```
 
 ## 核心组件
@@ -28,16 +39,34 @@ env
 ### 1. Event Source (事件源)
 文件: `event-source-webhook.yaml`
 
-定义了 Webhook 事件源，监听两个端点：
+定义了 GitLab Webhook 事件源，监听以下端点：
 - `/snciot_backend2-0`: 用于触发 snciot-backend2-0 项目的 CI/CD 流水线
-- `/hbe-charge`: 用于触发 hbe-charge 项目的 CI/CD 流水线
+
+配置详情：
+- 监听 GitLab 项目: `lins/snciot_backend2-0`
+- 监听事件类型: PushEvents（推送事件）
+- GitLab 基础 URL: `http://192.168.31.195`
+- Webhook 回调 URL: `http://192.168.30.149:30080`
 
 ### 2. Event Sensor (事件传感器)
 文件: `event-sensor-webhook.yaml`
 
-监听来自 Event Source 的事件，并触发相应的工作流。包含两个触发器：
-- snciot-backend2-0-trigger: 处理 snciot-backend2-0 项目事件
-- hbe-charge-trigger: 处理 hbe-charge 项目事件
+监听来自 Event Source 的事件，并触发相应的工作流。主要功能包括：
+- 接收 GitLab Webhook 事件
+- 解析事件数据并提取关键参数
+- 触发 snciot-backend2-0 CI/CD 流水线
+- 提取的参数包括：
+  - branch: 分支名
+  - git-repo-url: Git 仓库地址
+  - commit-message: 提交信息
+  - commit-id: 提交 ID
+  - project-name: 项目名称
+  - target-branch: 目标分支
+  - build-user: 构建用户
+  - git-url: Git URL
+  - git-commit: Git 提交哈希
+  - build-time: 构建时间
+  - commit-author: 提交作者
 
 ### 3. EventBus (事件总线)
 文件: `eventbus.yaml`
@@ -57,11 +86,52 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
 #### 主工作流模板
 文件: `snciot-backend2-0-pipeline.yaml`
 
-定义了完整的 CI/CD 流水线，包含四个步骤：
+定义了完整的 CI/CD 流水线，包含以下步骤：
 1. 代码拉取 (snciot-backend2-0-pull)
 2. 代码构建 (snciot-backend2-0-build)
 3. 应用部署 (snciot-backend2-0-deploy)
 4. 钉钉通知 (snciot-backend2-0-dingtalk-notify)
+
+#### 代码拉取模板
+文件: `snciot-backend2-0-pull-template.yaml`
+
+负责从 GitLab 拉取代码，主要功能：
+- 使用 GitLab 凭据进行身份验证
+- 克隆指定分支的代码
+- 将代码存储在共享 PVC 中供后续步骤使用
+
+#### 代码构建模板
+文件: `snciot-backend2-0-build-template.yaml`
+
+负责构建前端应用，主要功能：
+- 使用 Node.js 环境
+- 安装项目依赖
+- 执行 Vite 构建
+- 生成构建产物
+
+#### 应用部署模板
+文件: `snciot-backend2-0-deploy-template.yaml`
+
+负责将构建产物部署到目标服务器，支持多环境部署：
+- Dev 环境: 192.168.30.111
+- Main 环境: 192.168.0.210
+- Release 环境: 20.77.170.190
+
+部署流程：
+1. 压缩构建产物
+2. 通过 SSH 传输到目标服务器
+3. 备份旧版本
+4. 解压新版本
+5. 清理旧备份（保留最近4个版本）
+6. 生成部署元数据
+
+#### 钉钉通知模板
+文件: `snciot-backend2-0-dingtalk-notify-template.yaml`
+
+负责发送构建结果通知到钉钉群，主要功能：
+- 根据构建状态发送成功或失败通知
+- 包含详细的构建信息
+- 支持@指定用户
 
 ## 配置说明
 
@@ -80,7 +150,10 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
    - username: GitLab 用户名
    - password: GitLab 密码
 
-4. **GitLab Webhook 密钥** (`gitlab-webhook-secret.yaml`)
+4. **GitLab 访问令牌** (`gitlab-access-secret.yaml`)
+   - token: GitLab Personal Access Token（用于 API 调用）
+
+5. **GitLab Webhook 密钥** (`gitlab-webhook-secret.yaml`)
    - secretToken: GitLab Webhook 验证令牌
    - 当前设置为: cicd (base64编码为: Y2ljZA==)
    - 注意: 此密钥用于 GitLab Webhook 认证，需要与 GitLab Webhook 配置中的 Secret Token 保持一致
@@ -103,6 +176,7 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
    kubectl apply -f dingtalk-webhook-secret.yaml -n argo-cicd
    kubectl apply -f deployment-ssh-keys.yaml -n argo-cicd
    kubectl apply -f gitlab-pull-secret.yaml -n argo-cicd
+   kubectl apply -f gitlab-access-secret.yaml -n argo-cicd
    kubectl apply -f gitlab-webhook-secret.yaml -n argo-cicd
    ```
 
@@ -141,28 +215,56 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
 部署完成后，可以通过以下 URL 触发 CI/CD 流水线：
 
 - 触发 snciot-backend2-0 项目: `http://<node-ip>:30080/snciot_backend2-0`
-- 触发 hbe-charge 项目: `http://<node-ip>:30080/hbe-charge`
 
-Webhook 请求应包含以下参数：
-- ref: Git 分支引用 (如 refs/heads/master)
-- git-repo-url: Git 仓库地址
-- commit-author: 提交作者
-- commit-message: 提交信息
-- commit-id: 提交 ID
-- project-name: 项目名称
-- target-branch: 目标分支
-- build-user: 构建用户
-- git-commit: Git 提交哈希
-- build-time: 构建时间
-
-## GitLab Webhook 配置
+### GitLab Webhook 配置
 
 在 GitLab 中配置 Webhook 时，请确保以下配置正确：
 
-1. URL: `http://<node-ip>:30080/snciot_backend2-0`
+1. URL: `http://192.168.30.149:30080/snciot_backend2-0`
 2. Secret Token: `cicd` (与 gitlab-webhook-secret.yaml 中配置的值一致)
 3. Trigger: 选择 "Push events"
 
-## 问题说明
+### 支持的分支和环境
 
-EventSource 中的 webhook 配置需要指定 `authHeaders: ["X-Gitlab-Token"]` 来明确使用 GitLab 的认证头部，否则默认可能使用其他认证方式（如 Bearer Token）。
+| 分支名 | 部署环境 | 目标服务器 | 端口 |
+|--------|----------|------------|------|
+| master | Dev 环境 | 192.168.30.111 | 22 |
+| main | Main 环境 | 192.168.0.210 | 22 |
+| release | Release 环境 | 20.77.170.190 | 1022 |
+
+## 故障排除
+
+### 常见问题
+
+1. **Webhook 无法触发流水线**
+   - 检查 GitLab Webhook URL 和 Secret Token 是否正确配置
+   - 确认 EventSource 服务是否正常运行
+   - 检查网络连通性
+
+2. **代码拉取失败**
+   - 检查 GitLab 凭据是否正确
+   - 确认 GitLab 项目访问权限
+   - 检查网络连接
+
+3. **构建失败**
+   - 查看构建日志了解具体错误
+   - 检查项目依赖是否正确安装
+   - 确认 Node.js 版本兼容性
+
+4. **部署失败**
+   - 检查目标服务器 SSH 连接
+   - 确认部署密钥是否正确
+   - 检查目标服务器磁盘空间
+
+### 日志查看
+
+```bash
+# 查看 EventSource 日志
+kubectl logs -n argo-cicd -l eventsource-name=gitlab-eventsource
+
+# 查看 Sensor 日志
+kubectl logs -n argo-cicd -l sensor-name=sample-eventsensor
+
+# 查看工作流日志
+argo logs <workflow-name> -n argo-cicd
+```
