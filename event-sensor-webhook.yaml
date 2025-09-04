@@ -212,32 +212,8 @@ spec:
               dest: spec.arguments.parameters.11.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
-              dest: spec.arguments.parameters.12.value
-              transform:
-                expression: 'value[0].id'
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
-              dest: spec.arguments.parameters.13.value
-              transform:
-                expression: 'value[0].message'
-            - src:
-                dependencyName: snciot-backend2-0-dep
                 dataKey: body.user_username
               dest: spec.arguments.parameters.14.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
-              dest: spec.arguments.parameters.15.value
-              transform:
-                expression: 'value[0].timestamp'
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits
-              dest: spec.arguments.parameters.16.value
-              transform:
-                expression: 'value[0].timestamp'
       policy:
         status:
           allow: [200, 201]
