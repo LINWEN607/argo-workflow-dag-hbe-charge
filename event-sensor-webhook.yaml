@@ -104,6 +104,7 @@ spec:
                         - name: commit-author
                         - name: build-user
                         - name: workflow-namespace
+                          value: ""
                         - name: workflow-name
                           value: ""
                         - name: workflow-status
