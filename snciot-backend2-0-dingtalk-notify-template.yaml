@@ -73,6 +73,10 @@ spec:
               exit 1
             fi
 
+            # 调试信息：检查密钥是否有换行符或多余空格
+            echo "Secret token raw: '${SECRET_TOKEN}'"
+            echo -n "$SECRET_TOKEN" | od -c
+
             echo "Debug: All parameters extracted successfully"
             echo "PROJECT_NAME: $PROJECT_NAME"
             echo "WORKFLOW_NAME: $WORKFLOW_NAME"
