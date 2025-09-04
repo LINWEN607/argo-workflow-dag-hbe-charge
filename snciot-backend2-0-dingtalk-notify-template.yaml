@@ -7,10 +7,6 @@ spec:
   securityContext:
     runAsNonRoot: false
   serviceAccountName: argo
-  volumes:
-    - name: credentials
-      secret:
-        secretName: deployment-ssh-keys
   templates:
     - name: snciot-backend2-0-dingtalk-notify
       inputs:
@@ -35,7 +31,7 @@ spec:
           - name: WEBHOOK_URL
             valueFrom:
               secretKeyRef:
-                name: dingtalk-webhook-secret
+                name: yx-dingtalk-webhook-secret
                 key: webhook-url
           - name: SECRET_TOKEN
             valueFrom:
