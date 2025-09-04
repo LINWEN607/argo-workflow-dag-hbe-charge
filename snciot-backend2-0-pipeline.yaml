@@ -65,14 +65,4 @@ spec:
             value: "{{workflow.parameters.commit-author}}"
           - name: build-user
             value: "{{workflow.parameters.build-user}}"
-          - name: workflow-namespace
-            value: "{{workflow.namespace}}"
-          - name: workflow-name
-            value: "{{workflow.name}}"
-          - name: workflow-status
-            value: "{{workflow.status}}"
-          - name: workflow-duration
-            value: "{{workflow.duration}}"
-          - name: workflow-start-time
-            value: "{{workflow.startedAt}}"
   onExit: snciot-backend2-0-dingtalk-notify
