@@ -18,13 +18,9 @@ spec:
           - name: build-user
           - name: workflow-namespace
           - name: workflow-name
-            value: "{{workflow.name}}"
           - name: workflow-status
-            value: "{{workflow.status}}"
           - name: workflow-duration
-            value: "{{workflow.duration}}"
           - name: workflow-start-time
-            value: "{{workflow.startedAt}}"
       container:
         image: docker.io/library/dingtalk-notify:latest
         imagePullPolicy: IfNotPresent
@@ -52,13 +48,13 @@ spec:
           - name: WORKFLOW_NAMESPACE
             value: "{{inputs.parameters.workflow-namespace}}"
           - name: WORKFLOW_NAME
-            value: "{{inputs.parameters.workflow-name}}"
+            value: "{{workflow.name}}"
           - name: WORKFLOW_STATUS
-            value: "{{inputs.parameters.workflow-status}}"
+            value: "{{workflow.status}}"
           - name: WORKFLOW_DURATION
-            value: "{{inputs.parameters.workflow-duration}}"
+            value: "{{workflow.duration}}"
           - name: WORKFLOW_START_TIME
-            value: "{{inputs.parameters.workflow-start-time}}"
+            value: "{{workflow.startedAt}}"
           - name: TZ
             value: "Asia/Shanghai"
         command: ["/bin/sh", "-c"]
