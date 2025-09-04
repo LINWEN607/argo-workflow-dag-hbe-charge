@@ -36,7 +36,7 @@ spec:
           - name: SECRET_TOKEN
             valueFrom:
               secretKeyRef:
-                name: dingtalk-webhook-secret
+                name: yx-dingtalk-webhook-secret
                 key: secret-token
           - name: PROJECT_NAME
             value: "{{inputs.parameters.project-name}}"
