@@ -105,9 +105,13 @@ spec:
                         - name: build-user
                         - name: workflow-namespace
                         - name: workflow-name
+                          value: ""
                         - name: workflow-status
+                          value: ""
                         - name: workflow-duration
+                          value: ""
                         - name: workflow-start-time
+                          value: ""
                     steps:
                       - - name: notify
                           templateRef:
