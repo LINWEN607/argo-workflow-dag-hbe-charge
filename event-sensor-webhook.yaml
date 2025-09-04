@@ -54,16 +54,6 @@ spec:
                       value: ""
                     - name: workflow-namespace
                       value: ""
-                    - name: workflow-name
-                      value: ""
-                    - name: workflow-status
-                      value: ""
-                    - name: workflow-duration
-                      value: ""
-                    - name: workflow-start-time
-                      value: ""
-                    - name: workflow-namespace
-                      value: ""
                     - name: additional-param
                       value: ""
                 templates:
@@ -137,16 +127,7 @@ spec:
                                 value: "{{inputs.parameters.commit-author}}"
                               - name: build-user
                                 value: "{{inputs.parameters.build-user}}"
-                              - name: workflow-namespace
-                                value: "{{inputs.parameters.workflow-namespace}}"
-                              - name: workflow-name
-                                value: "{{inputs.parameters.workflow-name}}"
-                              - name: workflow-status
-                                value: "{{inputs.parameters.workflow-status}}"
-                              - name: workflow-duration
-                                value: "{{inputs.parameters.workflow-duration}}"
-                              - name: workflow-start-time
-                                value: "{{inputs.parameters.workflow-start-time}}"
+                              
                 onExit: snciot-backend2-0-dingtalk-notify
           parameters:
             - src:
