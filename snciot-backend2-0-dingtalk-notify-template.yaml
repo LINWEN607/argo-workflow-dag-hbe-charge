@@ -135,7 +135,7 @@ spec:
             esac
 
             # 构建消息内容
-            MESSAGE="### $STATUS_TEXT\n\n- **项目名称**：$PROJECT_NAME\n- **任务名称**：$WORKFLOW_NAME\n- **构建服务**：前端Vite项目\n- **任务状态**：$STATUS_TEXT\n- **任务持续时间**：$WORKFLOW_DURATION\n- **Commit ID**：$COMMIT_ID\n- **Commit 信息**：$COMMIT_MESSAGE\n- **修改人**：$COMMIT_AUTHOR\n\n> 构建时间：$TIMESTAMP\n> 构建人：$BUILD_USER\n\n**操作建议**："
+            MESSAGE="### $STATUS_TEXT\n\n- **项目名称**：$PROJECT_NAME\n- **任务名称**：$WORKFLOW_NAME\n- **构建服务**：前端Vite项目\n- **任务状态**：$STATUS_TEXT\n- **任务持续时间**：$WORKFLOW_DURATION\n- **Commit ID**：$COMMIT_ID\n- **Commit 信息**：$COMMIT_MESSAGE\n- **修改人**：$COMMIT_AUTHOR\n\n> 构建时间：$TIMESTAMP_MS\n> 构建人：$BUILD_USER\n\n**操作建议**："
 
             # 添加操作建议
             if [ "$WORKFLOW_STATUS" = "Succeeded" ]; then
@@ -165,7 +165,7 @@ spec:
             echo "Timestamp: $TIMESTAMP_MS"
 
             # 生成签名（使用Python生成，确保正确性）
-            SIGNATURE=$(python3 -c "import hmac; import hashlib; import base64; import urllib.parse; timestamp = '$TIMESTAMP_MS'; secret = '$SECRET_TOKEN'; secret_enc = secret.encode('utf-8'); string_to_sign = '{}\n{}'.format(timestamp, secret); string_to_sign_enc = string_to_sign.encode('utf-8'); hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest(); sign = urllib.parse.quote_plus(base64.b64encode(hmac_code).decode('utf-8')); print(sign)")
+            SIGNATURE=$(python3 -c "import hmac; import hashlib; import base64; import urllib.parse; timestamp = '$TIMESTAMP_MS'; secret = '$SECRET_TOKEN'; secret_enc = secret.encode('utf-8'); string_to_sign = '{}\n{}'.format(timestamp, secret); string_to_sign_enc = string_to_sign.encode('utf-8'); hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest(); sign = urllib.parse.quote(base64.b64encode(hmac_code).decode('utf-8')); print(sign)")
             echo "URL encoded signature: $SIGNATURE"
 
             # 构建带签名的URL
