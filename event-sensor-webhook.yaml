@@ -16,131 +16,15 @@ spec:
         argoWorkflow:
           group: argoproj.io
           version: v1alpha1
-          resource: workflows
+          resource: workflowtemplates
           operation: submit
           source:
             resource:
               apiVersion: argoproj.io/v1alpha1
-              kind: Workflow
+              kind: WorkflowTemplate
               metadata:
-                generateName: snciot-backend2-0-
+                name: snciot-backend2-0-pipeline
                 namespace: argo-cicd
-              spec:
-                serviceAccountName: argo
-                entrypoint: snciot-backend2-0-sensor-pipeline
-                arguments:
-                  parameters:
-                    - name: branch
-                      value: ""
-                    - name: git-repo-url
-                      value: ""
-                    - name: commit-message
-                      value: ""
-                    - name: commit-id
-                      value: ""
-                    - name: project-name
-                      value: ""
-                    - name: target-branch
-                      value: ""
-                    - name: build-user
-                      value: ""
-                    - name: git-url
-                      value: ""
-                    - name: git-commit
-                      value: ""
-                    - name: build-time
-                      value: ""
-                    - name: commit-author
-                      value: ""
-                    - name: workflow-namespace
-                      value: ""
-                templates:
-                  - name: snciot-backend2-0-sensor-pipeline
-                    steps:
-                      - - name: snciot-backend2-0-pull
-                          templateRef:
-                            name: snciot-backend2-0-pull-template
-                            template: snciot-backend2-0-pull
-                          arguments:
-                            parameters:
-                              - name: branch
-                                value: "{{workflow.parameters.branch}}"
-                              - name: url
-                                value: "{{workflow.parameters.git-repo-url}}"
-
-                      - - name: snciot-backend2-0-build
-                          templateRef:
-                            name: snciot-backend2-0-build-template
-                            template: snciot-backend2-0-build
-                          arguments:
-                            parameters:
-                              - name: branch
-                                value: "{{workflow.parameters.branch}}"
-
-                      - - name: snciot-backend2-0-deploy
-                          templateRef:
-                            name: snciot-backend2-0-deploy-template
-                            template: snciot-backend2-0-deploy
-                          arguments:
-                            parameters:
-                              - name: target-branch
-                                value: "{{workflow.parameters.target-branch}}"
-                              - name: project-name
-                                value: "{{workflow.parameters.project-name}}"
-                              - name: git-commit
-                                value: "{{workflow.parameters.git-commit}}"
-                              - name: commit-message
-                                value: "{{workflow.parameters.commit-message}}"
-                              - name: build-time
-                                value: "{{workflow.parameters.build-time}}"
-                              - name: git-url
-                                value: "{{workflow.parameters.git-repo-url}}"
-                  - name: snciot-backend2-0-dingtalk-notify
-                    inputs:
-                      parameters:
-                        - name: project-name
-                        - name: commit-id
-                        - name: commit-message
-                        - name: commit-author
-                        - name: build-user
-                        - name: workflow-namespace
-                          value: ""
-                        - name: workflow-name
-                          value: ""
-                        - name: workflow-status
-                          value: ""
-                        - name: workflow-duration
-                          value: ""
-                        - name: workflow-start-time
-                          value: ""
-                    steps:
-                      - - name: notify
-                          templateRef:
-                            name: snciot-backend2-0-dingtalk-notify-template
-                            template: snciot-backend2-0-dingtalk-notify
-                          arguments:
-                            parameters:
-                              - name: project-name
-                                value: "{{inputs.parameters.project-name}}"
-                              - name: commit-id
-                                value: "{{inputs.parameters.commit-id}}"
-                              - name: commit-message
-                                value: "{{inputs.parameters.commit-message}}"
-                              - name: commit-author
-                                value: "{{inputs.parameters.commit-author}}"
-                              - name: build-user
-                                value: "{{inputs.parameters.build-user}}"
-                              - name: workflow-namespace
-                                value: "{{inputs.parameters.workflow-namespace}}"
-                              - name: workflow-name
-                                value: "{{inputs.parameters.workflow-name}}"
-                              - name: workflow-status
-                                value: "{{inputs.parameters.workflow-status}}"
-                              - name: workflow-duration
-                                value: "{{inputs.parameters.workflow-duration}}"
-                              - name: workflow-start-time
-                                value: "{{inputs.parameters.workflow-start-time}}"
-                onExit: snciot-backend2-0-dingtalk-notify
           parameters:
             - src:
                 dependencyName: snciot-backend2-0-dep
@@ -195,6 +79,10 @@ spec:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.project.name
               dest: spec.arguments.parameters.11.value
+            - src:
+                dependencyName: snciot-backend2-0-dep
+                dataKey: body.target_branch
+              dest: spec.arguments.parameters.12.value
       policy:
         status:
           allow: [200, 201]
