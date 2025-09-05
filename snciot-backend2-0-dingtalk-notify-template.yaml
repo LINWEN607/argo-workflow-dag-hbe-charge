@@ -157,8 +157,20 @@ spec:
               TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
             fi
 
+            # 将WORKFLOW_DURATION从秒数格式转换为分钟加秒数的格式
+            if [ -n "$WORKFLOW_DURATION" ]; then
+              DURATION_SECONDS=${WORKFLOW_DURATION%.*}
+              DURATION_MILLISECONDS=${WORKFLOW_DURATION#*.}
+              DURATION_MILLISECONDS=${DURATION_MILLISECONDS:0:3}
+              MINUTES=$((DURATION_SECONDS / 60))
+              SECONDS=$((DURATION_SECONDS % 60))
+              FORMATTED_DURATION="${MINUTES}分${SECONDS}秒${DURATION_MILLISECONDS}"
+            else
+              FORMATTED_DURATION="$WORKFLOW_DURATION"
+            fi
+
             # 构建消息内容
-            MESSAGE="### $STATUS_TEXT\n\n- **项目名称**：$PROJECT_NAME\n- **任务名称**：$WORKFLOW_NAME\n- **构建服务**：前端Vite项目\n- **任务状态**：$STATUS_TEXT\n- **任务持续时间**：$WORKFLOW_DURATION\n- **Commit ID**：$COMMIT_ID\n- **Commit 信息**：$COMMIT_MESSAGE\n- **修改人**：$COMMIT_AUTHOR\n\n> 构建时间：$TIMESTAMP\n> 构建人：$BUILD_USER\n\n**操作建议**："
+            MESSAGE="### $STATUS_TEXT\n\n- **项目名称**：$PROJECT_NAME\n- **任务名称**：$WORKFLOW_NAME\n- **构建服务**：前端Vite项目\n- **任务状态**：$STATUS_TEXT\n- **任务持续时间**：$FORMATTED_DURATION\n- **Commit ID**：$COMMIT_ID\n- **Commit 信息**：$COMMIT_MESSAGE\n- **修改人**：$COMMIT_AUTHOR\n\n> 构建时间：$TIMESTAMP\n> 构建人：$BUILD_USER\n\n**操作建议**："
 
             # 添加操作建议
             if [ "$WORKFLOW_STATUS" = "Succeeded" ]; then
