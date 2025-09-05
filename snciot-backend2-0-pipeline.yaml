@@ -21,19 +21,19 @@ spec:
       - name: project-name
         value: ""
       - name: target-branch
-        value: "{{workflow.parameters.branch}}"  # 复用 branch 参数
+        value: "{{workflow.parameters.branch}}" # 复用 branch 参数
       - name: build-user
         value: ""
       - name: git-url
-        value: "{{workflow.parameters.git-repo-url}}"  # 复用 git-repo-url 参数
+        value: "{{workflow.parameters.git-repo-url}}" # 复用 git-repo-url 参数
       - name: git-commit
-        value: "{{workflow.parameters.commit-id}}"  # 复用 commit-id 参数
+        value: "{{workflow.parameters.commit-id}}" # 复用 commit-id 参数
       - name: build-time
         value: ""
       - name: commit-author
         value: ""
       - name: project-name-2
-        value: "{{workflow.parameters.project-name}}"  # 复用 project-name 参数
+        value: "{{workflow.parameters.project-name}}" # 复用 project-name 参数
   templates:
     - name: snciot-backend2-0-pipeline
       steps:
