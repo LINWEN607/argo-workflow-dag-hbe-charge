@@ -34,6 +34,37 @@ env/
 └── stan-pv-0-pvc.yaml                  # EventBus PVC 配置
 ```
 
+## 项目架构与数据流
+
+本项目采用事件驱动的微服务架构，核心组件包括：
+
+1. **Event Source (事件源)**: 监听 GitLab Webhook 事件
+2. **EventBus (事件总线)**: 负责事件传输
+3. **Event Sensor (事件传感器)**: 处理事件并触发工作流
+4. **Workflow Templates (工作流模板)**: 执行具体的 CI/CD 任务
+
+完整的数据流如下：
+```
+GitLab Push Event 
+    → Webhook (event-source-webhook.yaml) 
+    → EventBus (eventbus.yaml) 
+    → Event Sensor (event-sensor-webhook.yaml) 
+    → Workflow (snciot-backend2-0-pipeline.yaml)
+        ├── Pull Template (snciot-backend2-0-pull-template.yaml)
+        ├── Build Template (snciot-backend2-0-build-template.yaml)
+        ├── Deploy Template (snciot-backend2-0-deploy-template.yaml)
+        └── Notify Template (snciot-backend2-0-dingtalk-notify-template.yaml)
+```
+
+### 关键数据字段传递
+
+在事件处理过程中，以下关键数据字段会被提取和传递：
+
+- **build-time**: 来自 GitLab webhook payload 中的 `commits[0].timestamp` 字段
+- **BUILD_TIME_FORMATTED**: 在部署阶段，将 build-time 格式化为易读形式的变量
+  - 格式化方式: `BUILD_TIME_FORMATTED=$(echo "$BUILD_TIME" | sed 's/T/ /g' | sed 's/+/_/g')`
+  - 用途: 用于生成部署元数据和版本号
+
 ## 核心组件
 
 ### 1. Event Source (事件源)
@@ -56,17 +87,17 @@ env/
 - 解析事件数据并提取关键参数
 - 触发 snciot-backend2-0 CI/CD 流水线
 - 提取的参数包括：
-  - branch: 分支名
-  - git-repo-url: Git 仓库地址
-  - commit-message: 提交信息
-  - commit-id: 提交 ID
-  - project-name: 项目名称
-  - target-branch: 目标分支
-  - build-user: 构建用户
-  - git-url: Git URL
-  - git-commit: Git 提交哈希
-  - build-time: 构建时间
-  - commit-author: 提交作者
+  - branch: 分支名 (来自 body.ref)
+  - git-repo-url: Git 仓库地址 (来自 body.project.git_http_url)
+  - commit-message: 提交信息 (来自 body.commits.0.message)
+  - commit-id: 提交 ID (来自 body.commits.0.id)
+  - project-name: 项目名称 (来自 body.project.name)
+  - target-branch: 目标分支 (来自 body.ref)
+  - build-user: 构建用户 (来自 body.user_username)
+  - git-url: Git URL (来自 body.project.git_http_url)
+  - git-commit: Git 提交哈希 (来自 body.commits.0.id)
+  - build-time: 构建时间 (来自 GitLab webhook 中 commits[0].timestamp 字段)
+  - commit-author: 提交作者 (来自 body.commits.0.author.name)
 
 ### 3. EventBus (事件总线)
 文件: `eventbus.yaml`
@@ -124,6 +155,8 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
 4. 解压新版本
 5. 清理旧备份（保留最近4个版本）
 6. 生成部署元数据
+
+在部署过程中，系统会使用 `BUILD_TIME_FORMATTED` 变量，该变量取自 GitLab webhook payload 中的 `commits[0].timestamp` 字段，并在部署脚本中格式化为更易读的形式。
 
 #### 钉钉通知模板
 文件: `snciot-backend2-0-dingtalk-notify-template.yaml`
