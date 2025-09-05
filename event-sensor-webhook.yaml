@@ -48,6 +48,7 @@ spec:
                     - name: commit-author
                     - name: project-name-2
           parameters:
+            # 简化后的参数列表，移除重复映射
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.ref
@@ -72,22 +73,8 @@ spec:
               dest: spec.arguments.parameters.4.value
             - src:
                 dependencyName: snciot-backend2-0-dep
-                dataKey: body.ref
-              dest: spec.arguments.parameters.5.value
-              transform:
-                expression: 'trimPrefix("refs/heads/", value)'
-            - src:
-                dependencyName: snciot-backend2-0-dep
                 dataKey: body.user_username
               dest: spec.arguments.parameters.6.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.project.git_http_url
-              dest: spec.arguments.parameters.7.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.commits.0.id
-              dest: spec.arguments.parameters.8.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits.0.timestamp
@@ -96,10 +83,6 @@ spec:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits.0.author.name
               dest: spec.arguments.parameters.10.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.project.name
-              dest: spec.arguments.parameters.11.value
       policy:
         status:
           allow: [200, 201]

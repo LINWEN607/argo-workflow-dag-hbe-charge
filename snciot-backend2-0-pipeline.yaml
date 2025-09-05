@@ -10,30 +10,30 @@ spec:
   serviceAccountName: argo
   arguments:
     parameters:
-    - name: branch
-      value: ""
-    - name: git-repo-url
-      value: ""
-    - name: commit-message
-      value: ""
-    - name: commit-id
-      value: ""
-    - name: project-name
-      value: ""
-    - name: target-branch
-      value: ""
-    - name: build-user
-      value: ""
-    - name: git-url
-      value: ""
-    - name: git-commit
-      value: ""
-    - name: build-time
-      value: ""
-    - name: commit-author
-      value: ""
-    - name: project-name-2
-      value: ""
+      - name: branch
+        value: ""
+      - name: git-repo-url
+        value: ""
+      - name: commit-message
+        value: ""
+      - name: commit-id
+        value: ""
+      - name: project-name
+        value: ""
+      - name: target-branch
+        value: "{{workflow.parameters.branch}}"  # 复用 branch 参数
+      - name: build-user
+        value: ""
+      - name: git-url
+        value: "{{workflow.parameters.git-repo-url}}"  # 复用 git-repo-url 参数
+      - name: git-commit
+        value: "{{workflow.parameters.commit-id}}"  # 复用 commit-id 参数
+      - name: build-time
+        value: ""
+      - name: commit-author
+        value: ""
+      - name: project-name-2
+        value: "{{workflow.parameters.project-name}}"  # 复用 project-name 参数
   templates:
     - name: snciot-backend2-0-pipeline
       steps:
@@ -47,7 +47,6 @@ spec:
                   value: "{{workflow.parameters.branch}}"
                 - name: url
                   value: "{{workflow.parameters.git-repo-url}}"
-
         - - name: snciot-backend2-0-build
             templateRef:
               name: snciot-backend2-0-build-template
@@ -56,7 +55,6 @@ spec:
               parameters:
                 - name: branch
                   value: "{{workflow.parameters.branch}}"
-
         - - name: snciot-backend2-0-deploy
             templateRef:
               name: snciot-backend2-0-deploy-template
@@ -74,7 +72,7 @@ spec:
                 - name: build-time
                   value: "{{workflow.parameters.build-time}}"
                 - name: git-url
-                  value: "{{workflow.parameters.git-repo-url}}"
+                  value: "{{workflow.parameters.git-url}}"
     - name: snciot-backend2-0-dingtalk-notify
       steps:
         - - name: run-dingtalk-notify
