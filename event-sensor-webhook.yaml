@@ -79,10 +79,6 @@ spec:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.project.name
               dest: spec.arguments.parameters.11.value
-            - src:
-                dependencyName: snciot-backend2-0-dep
-                dataKey: body.target_branch
-              dest: spec.arguments.parameters.12.value
       policy:
         status:
           allow: [200, 201]
