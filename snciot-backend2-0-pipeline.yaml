@@ -8,6 +8,32 @@ spec:
     runAsNonRoot: false
   entrypoint: snciot-backend2-0-pipeline
   serviceAccountName: argo
+  arguments:
+    parameters:
+      - name: branch
+        value: ""
+      - name: git-repo-url
+        value: ""
+      - name: commit-message
+        value: ""
+      - name: commit-id
+        value: ""
+      - name: project-name
+        value: ""
+      - name: target-branch
+        value: ""
+      - name: build-user
+        value: ""
+      - name: git-url
+        value: ""
+      - name: git-commit
+        value: ""
+      - name: build-time
+        value: ""
+      - name: commit-author
+        value: ""
+      - name: project-name-2
+        value: ""
   templates:
     - name: snciot-backend2-0-pipeline
       steps:

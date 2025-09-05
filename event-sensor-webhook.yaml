@@ -70,7 +70,6 @@ spec:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits.0.timestamp
               dest: spec.arguments.parameters.9.value
-            # 为新增的参数添加映射
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits.0.author.name
