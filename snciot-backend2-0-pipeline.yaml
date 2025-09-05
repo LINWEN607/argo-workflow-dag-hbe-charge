@@ -102,5 +102,5 @@ spec:
                 - name: workflow-duration
                   value: "{{workflow.duration}}"
                 - name: workflow-start-time
-                  value: "{{workflow.startedAt}}"
+                  value: "{{workflow.creationTimestamp}}"
   onExit: snciot-backend2-0-dingtalk-notify
