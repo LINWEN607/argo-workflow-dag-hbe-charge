@@ -45,15 +45,15 @@ spec:
             value: "{{inputs.parameters.commit-author}}"
           - name: BUILD_USER
             value: "{{inputs.parameters.build-user}}"
-          - name: workflow-namespace
+          - name: WORKFLOW_NAMESPACE
             value: "{{inputs.parameters.workflow-namespace}}"
-          - name: workflow-name
+          - name: WORKFLOW_NAME
             value: "{{inputs.parameters.workflow-name}}"
-          - name: workflow-status
+          - name: WORKFLOW_STATUS
             value: "{{inputs.parameters.workflow-status}}"
-          - name: workflow-duration
+          - name: WORKFLOW_DURATION
             value: "{{inputs.parameters.workflow-duration}}"
-          - name: workflow-start-time
+          - name: WORKFLOW_START_TIME
             value: "{{inputs.parameters.workflow-start-time}}"
           - name: TZ
             value: "Asia/Shanghai"
@@ -75,7 +75,8 @@ spec:
 
             # 调试信息：检查密钥是否有换行符或多余空格
             echo "Secret token raw: '${SECRET_TOKEN}'"
-            echo -n "$SECRET_TOKEN" | od -c
+            echo -n "Secret token without newlines: '" && echo -n "${SECRET_TOKEN}" | tr -d '\n' && echo "'"
+            echo -n "Secret token hex dump: " && echo -n "${SECRET_TOKEN}" | od -c
 
             echo "Debug: All parameters extracted successfully"
             echo "PROJECT_NAME: $PROJECT_NAME"
@@ -110,6 +111,9 @@ spec:
               "linwen")
                 PHONE_NUMBER="18888888888"
                 ;;
+              "Administrator")
+                PHONE_NUMBER=""
+                ;;
               *)
                 PHONE_NUMBER=""
                 ;;
@@ -134,8 +138,30 @@ spec:
                 ;;
             esac
 
+            # 获取工作流的 startTime 作为构建时间
+            START_TIME=$(kubectl get workflow "$WORKFLOW_NAME" -n "$WORKFLOW_NAMESPACE" -o jsonpath='{.status.startedAt}' 2>/dev/null || echo "")
+
+            # 使用 Python 解析和格式化时间
+            if [ -n "$WORKFLOW_START_TIME" ]; then
+              # 使用 Python 转换时间格式 (UTC 到 Asia/Shanghai)
+              TIMESTAMP=$(python3 -c "
+            import datetime
+            try:
+                # 解析 UTC 时间
+                utc_time = datetime.datetime.strptime('$WORKFLOW_START_TIME', '%Y-%m-%dT%H:%M:%SZ')
+                # 添加时区信息并转换为上海时区
+                utc_time = utc_time.replace(tzinfo=datetime.timezone.utc)
+                shanghai_time = utc_time.astimezone(datetime.timezone(datetime.timedelta(hours=8)))
+                print(shanghai_time.strftime('%Y-%m-%d %H:%M:%S'))
+            except Exception as e:
+                print('$WORKFLOW_START_TIME')
+            " 2>/dev/null || echo "$WORKFLOW_START_TIME")
+            else
+              TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
+            fi
+
             # 构建消息内容
-            MESSAGE="### $STATUS_TEXT\n\n- **项目名称**：$PROJECT_NAME\n- **任务名称**：$WORKFLOW_NAME\n- **构建服务**：前端Vite项目\n- **任务状态**：$STATUS_TEXT\n- **任务持续时间**：$WORKFLOW_DURATION\n- **Commit ID**：$COMMIT_ID\n- **Commit 信息**：$COMMIT_MESSAGE\n- **修改人**：$COMMIT_AUTHOR\n\n> 构建时间：$TIMESTAMP_MS\n> 构建人：$BUILD_USER\n\n**操作建议**："
+            MESSAGE="### $STATUS_TEXT\n\n- **项目名称**：$PROJECT_NAME\n- **任务名称**：$WORKFLOW_NAME\n- **构建服务**：前端Vite项目\n- **任务状态**：$STATUS_TEXT\n- **任务持续时间**：$WORKFLOW_DURATION\n- **Commit ID**：$COMMIT_ID\n- **Commit 信息**：$COMMIT_MESSAGE\n- **修改人**：$COMMIT_AUTHOR\n\n> 构建时间：$TIMESTAMP\n> 构建人：$BUILD_USER\n\n**操作建议**："
 
             # 添加操作建议
             if [ "$WORKFLOW_STATUS" = "Succeeded" ]; then
@@ -165,7 +191,8 @@ spec:
             echo "Timestamp: $TIMESTAMP_MS"
 
             # 生成签名（使用Python生成，确保正确性）
-            SIGNATURE=$(python3 -c "import hmac; import hashlib; import base64; import urllib.parse; timestamp = '$TIMESTAMP_MS'; secret = '$SECRET_TOKEN'; secret_enc = secret.encode('utf-8'); string_to_sign = '{}\n{}'.format(timestamp, secret); string_to_sign_enc = string_to_sign.encode('utf-8'); hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest(); sign = urllib.parse.quote(base64.b64encode(hmac_code).decode('utf-8')); print(sign)")
+            SIGNATURE=$(python3 -c "import hmac; import hashlib; import base64; import urllib.parse; timestamp = int('$TIMESTAMP_MS'); secret = '$SECRET_TOKEN'; string_to_sign = '{}\n{}'.format(timestamp, secret); string_to_sign_enc = string_to_sign.encode('utf-8'); hmac_code = hmac.new(secret.encode('utf-8'), string_to_sign_enc, digestmod=hashlib.sha256).digest(); sign = urllib.parse.quote_plus(base64.b64encode(hmac_code).decode('utf-8')); print(sign)")
+
             echo "URL encoded signature: $SIGNATURE"
 
             # 构建带签名的URL
