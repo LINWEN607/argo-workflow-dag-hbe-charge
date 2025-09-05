@@ -29,55 +29,55 @@ spec:
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.ref
-              dest: spec.arguments.parameters.0.value
+              dest: spec.arguments.parameters.branch.value
               transform:
                 expression: 'trimPrefix("refs/heads/", value)'
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.project.git_http_url
-              dest: spec.arguments.parameters.1.value
+              dest: spec.arguments.parameters.git-repo-url.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits.0.message
-              dest: spec.arguments.parameters.2.value
+              dest: spec.arguments.parameters.commit-message.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits.0.id
-              dest: spec.arguments.parameters.3.value
+              dest: spec.arguments.parameters.commit-id.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.project.name
-              dest: spec.arguments.parameters.4.value
+              dest: spec.arguments.parameters.project-name.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.ref
-              dest: spec.arguments.parameters.5.value
+              dest: spec.arguments.parameters.target-branch.value
               transform:
                 expression: 'trimPrefix("refs/heads/", value)'
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.user_username
-              dest: spec.arguments.parameters.6.value
+              dest: spec.arguments.parameters.build-user.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.project.git_http_url
-              dest: spec.arguments.parameters.7.value
+              dest: spec.arguments.parameters.git-url.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits.0.id
-              dest: spec.arguments.parameters.8.value
+              dest: spec.arguments.parameters.git-commit.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits.0.timestamp
-              dest: spec.arguments.parameters.9.value
+              dest: spec.arguments.parameters.build-time.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.commits.0.author.name
-              dest: spec.arguments.parameters.10.value
+              dest: spec.arguments.parameters.commit-author.value
             - src:
                 dependencyName: snciot-backend2-0-dep
                 dataKey: body.project.name
-              dest: spec.arguments.parameters.11.value
+              dest: spec.arguments.parameters.project-name-2.value
       policy:
         status:
           allow: [200, 201]
