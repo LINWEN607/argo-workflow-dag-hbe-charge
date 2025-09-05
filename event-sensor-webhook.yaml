@@ -28,6 +28,20 @@ spec:
               spec:
                 workflowTemplateRef:
                   name: snciot-backend2-0-pipeline
+                arguments:
+                  parameters:
+                    - name: branch
+                    - name: git-repo-url
+                    - name: commit-message
+                    - name: commit-id
+                    - name: project-name
+                    - name: target-branch
+                    - name: build-user
+                    - name: git-url
+                    - name: git-commit
+                    - name: build-time
+                    - name: commit-author
+                    - name: project-name-2
           parameters:
             - src:
                 dependencyName: snciot-backend2-0-dep
