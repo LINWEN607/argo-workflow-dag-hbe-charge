@@ -16,15 +16,18 @@ spec:
         argoWorkflow:
           group: argoproj.io
           version: v1alpha1
-          resource: workflowtemplates
+          resource: workflows
           operation: submit
           source:
             resource:
               apiVersion: argoproj.io/v1alpha1
-              kind: WorkflowTemplate
+              kind: Workflow
               metadata:
-                name: snciot-backend2-0-pipeline
+                generateName: snciot-backend2-0-pipeline-
                 namespace: argo-cicd
+              spec:
+                workflowTemplateRef:
+                  name: snciot-backend2-0-pipeline
           parameters:
             - src:
                 dependencyName: snciot-backend2-0-dep
