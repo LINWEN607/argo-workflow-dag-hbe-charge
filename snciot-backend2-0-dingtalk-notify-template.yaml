@@ -138,8 +138,6 @@ spec:
                 ;;
             esac
 
-            # 获取工作流的 startTime 作为构建时间
-            START_TIME=$(kubectl get workflow "$WORKFLOW_NAME" -n "$WORKFLOW_NAMESPACE" -o jsonpath='{.status.startedAt}' 2>/dev/null || echo "")
 
             # 使用 Python 解析和格式化时间
             if [ -n "$WORKFLOW_START_TIME" ]; then
