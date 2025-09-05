@@ -48,59 +48,59 @@ spec:
                     - name: commit-author
                     - name: project-name-2
           parameters:
-  - src:
-      dependencyName: snciot-backend2-0-dep
-      dataKey: body.ref
-    dest: spec.arguments.parameters.0.value # branch
-    transform:
-      expression: 'trimPrefix("refs/heads/", value)'
-  - src:
-      dependencyName: snciot-backend2-0-dep
-      dataKey: body.project.git_http_url
-    dest: spec.arguments.parameters.1.value # git-repo-url
-  - src:
-      dependencyName: snciot-backend2-0-dep
-      dataKey: body.commits.0.message
-    dest: spec.arguments.parameters.2.value # commit-message
-  - src:
-      dependencyName: snciot-backend2-0-dep
-      dataKey: body.commits.0.id
-    dest: spec.arguments.parameters.3.value # commit-id
-  - src:
-      dependencyName: snciot-backend2-0-dep
-      dataKey: body.project.name
-    dest: spec.arguments.parameters.4.value # project-name
-  # --- 新增以下映射，解决报错问题 ---
-  - src:
-      dependencyName: snciot-backend2-0-dep
-      dataKey: body.ref # target-branch 来源和 branch 一样
-    dest: spec.arguments.parameters.5.value # target-branch (第5个参数)
-    transform:
-      expression: 'trimPrefix("refs/heads/", value)'
-  - src:
-      dependencyName: snciot-backend2-0-dep
-      dataKey: body.user_username
-    dest: spec.arguments.parameters.6.value # build-user
-  - src:
-      dependencyName: snciot-backend2-0-dep
-      dataKey: body.project.git_http_url # git-url 来源和 git-repo-url 一样
-    dest: spec.arguments.parameters.7.value # git-url (第7个参数)
-  - src:
-      dependencyName: snciot-backend2-0-dep
-      dataKey: body.commits.0.id # git-commit 来源和 commit-id 一样
-    dest: spec.arguments.parameters.8.value # git-commit (第8个参数)
-  - src:
-      dependencyName: snciot-backend2-0-dep
-      dataKey: body.commits.0.timestamp
-    dest: spec.arguments.parameters.9.value # build-time
-  - src:
-      dependencyName: snciot-backend2-0-dep
-      dataKey: body.commits.0.author.name
-    dest: spec.arguments.parameters.10.value # commit-author
-  - src:
-      dependencyName: snciot-backend2-0-dep
-      dataKey: body.project.name # project-name-2 来源和 project-name 一样
-    dest: spec.arguments.parameters.11.value # project-name-2 (第11个参数)
+            - src:
+                dependencyName: snciot-backend2-0-dep
+                dataKey: body.ref
+              dest: spec.arguments.parameters.0.value # branch
+              transform:
+                expression: 'trimPrefix("refs/heads/", value)'
+            - src:
+                dependencyName: snciot-backend2-0-dep
+                dataKey: body.project.git_http_url
+              dest: spec.arguments.parameters.1.value # git-repo-url
+            - src:
+                dependencyName: snciot-backend2-0-dep
+                dataKey: body.commits.0.message
+              dest: spec.arguments.parameters.2.value # commit-message
+            - src:
+                dependencyName: snciot-backend2-0-dep
+                dataKey: body.commits.0.id
+              dest: spec.arguments.parameters.3.value # commit-id
+            - src:
+                dependencyName: snciot-backend2-0-dep
+                dataKey: body.project.name
+              dest: spec.arguments.parameters.4.value # project-name
+            # --- 新增以下映射，解决报错问题 ---
+            - src:
+                dependencyName: snciot-backend2-0-dep
+                dataKey: body.ref # target-branch 来源和 branch 一样
+              dest: spec.arguments.parameters.5.value # target-branch (第5个参数)
+              transform:
+                expression: 'trimPrefix("refs/heads/", value)'
+            - src:
+                dependencyName: snciot-backend2-0-dep
+                dataKey: body.user_username
+              dest: spec.arguments.parameters.6.value # build-user
+            - src:
+                dependencyName: snciot-backend2-0-dep
+                dataKey: body.project.git_http_url # git-url 来源和 git-repo-url 一样
+              dest: spec.arguments.parameters.7.value # git-url (第7个参数)
+            - src:
+                dependencyName: snciot-backend2-0-dep
+                dataKey: body.commits.0.id # git-commit 来源和 commit-id 一样
+              dest: spec.arguments.parameters.8.value # git-commit (第8个参数)
+            - src:
+                dependencyName: snciot-backend2-0-dep
+                dataKey: body.commits.0.timestamp
+              dest: spec.arguments.parameters.9.value # build-time
+            - src:
+                dependencyName: snciot-backend2-0-dep
+                dataKey: body.commits.0.author.name
+              dest: spec.arguments.parameters.10.value # commit-author
+            - src:
+                dependencyName: snciot-backend2-0-dep
+                dataKey: body.project.name # project-name-2 来源和 project-name 一样
+              dest: spec.arguments.parameters.11.value # project-name-2 (第11个参数)
       policy:
         status:
           allow: [200, 201]
