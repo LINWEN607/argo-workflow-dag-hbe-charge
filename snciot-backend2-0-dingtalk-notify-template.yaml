@@ -119,7 +119,6 @@ spec:
                 ;;
             esac
 
-            echo "PHONE_NUMBER: $PHONE_NUMBER"
 
             # 根据部署任务状态设置标题和内容
             # Argo Workflows的主要状态: Succeeded, Failed, Error
