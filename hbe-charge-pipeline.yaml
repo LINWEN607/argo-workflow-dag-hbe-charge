@@ -1,12 +1,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
-  name: snciot-backend2-0-pipeline
+  name: hbe-charge-pipeline
   namespace: argo-cicd
 spec:
   securityContext:
     runAsNonRoot: false
-  entrypoint: snciot-backend2-0-pipeline
+  entrypoint: hbe-charge-pipeline
   serviceAccountName: argo
   arguments:
     parameters:
@@ -35,30 +35,30 @@ spec:
       - name: project-name-2
         value: "" 
   templates:
-    - name: snciot-backend2-0-pipeline
+    - name: hbe-charge-pipeline
       steps:
-        - - name: snciot-backend2-0-pull
+        - - name: hbe-charge-pull
             templateRef:
-              name: snciot-backend2-0-pull-template
-              template: snciot-backend2-0-pull
+              name: hbe-charge-pull-template
+              template: hbe-charge-pull
             arguments:
               parameters:
                 - name: branch
                   value: "{{workflow.parameters.branch}}"
                 - name: url
                   value: "{{workflow.parameters.git-repo-url}}"
-        - - name: snciot-backend2-0-build
+        - - name: hbe-charge-build
             templateRef:
-              name: snciot-backend2-0-build-template
-              template: snciot-backend2-0-build
+              name: hbe-charge-build-template
+              template: hbe-charge-build
             arguments:
               parameters:
                 - name: branch
                   value: "{{workflow.parameters.branch}}"
-        - - name: snciot-backend2-0-deploy
+        - - name: hbe-charge-deploy
             templateRef:
-              name: snciot-backend2-0-deploy-template
-              template: snciot-backend2-0-deploy
+              name: hbe-charge-deploy-template
+              template: hbe-charge-deploy
             arguments:
               parameters:
                 - name: target-branch
@@ -73,12 +73,12 @@ spec:
                   value: "{{workflow.parameters.build-time}}"
                 - name: git-url
                   value: "{{workflow.parameters.git-url}}"
-    - name: snciot-backend2-0-dingtalk-notify
+    - name: hbe-charge-dingtalk-notify
       steps:
         - - name: run-dingtalk-notify
             templateRef:
-              name: snciot-backend2-0-dingtalk-notify-template
-              template: snciot-backend2-0-dingtalk-notify
+              name: hbe-charge-dingtalk-notify-template
+              template: hbe-charge-dingtalk-notify
             arguments:
               parameters:
                 - name: project-name
@@ -101,4 +101,4 @@ spec:
                   value: "{{workflow.duration}}"
                 - name: workflow-start-time
                   value: "{{workflow.creationTimestamp}}"
-  onExit: snciot-backend2-0-dingtalk-notify
+  onExit: hbe-charge-dingtalk-notify

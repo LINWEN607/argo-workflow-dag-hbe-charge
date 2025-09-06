@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
-  name: snciot-backend2-0-dingtalk-notify-template
+  name: hbe-charge-dingtalk-notify-template
   namespace: argo-cicd
 spec:
   securityContext:
     runAsNonRoot: false
   serviceAccountName: argo
   templates:
-    - name: snciot-backend2-0-dingtalk-notify
+    - name: hbe-charge-dingtalk-notify
       inputs:
         parameters:
           - name: project-name

@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
-  name: snciot-backend2-0-build-template
+  name: hbe-charge-build-template
   namespace: argo-cicd
 spec:
   securityContext:
@@ -15,7 +15,7 @@ spec:
       secret:
         secretName: deployment-ssh-keys
   templates:
-    - name: snciot-backend2-0-build
+    - name: hbe-charge-build
       inputs:
         parameters:
           - name: branch
