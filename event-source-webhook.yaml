@@ -37,3 +37,30 @@ spec:
       # Gitlab基础URL
       gitlabBaseURL: http://192.168.31.195
       deleteHookOnFinish: true
+    hbe-charge:
+      # GitLab项目ID或路径（使用完整路径格式）
+      projects:
+        - "lins/hbe-charge"
+      # GitLab webhook配置
+      webhook:
+        endpoint: /snciot_backend2-0
+        port: "12000"
+        method: POST
+        # 外部可访问的URL，用于GitLab回调
+        url: http://192.168.30.149:30080
+      # 监听的事件类型
+      events:
+        - PushEvents
+      # 访问令牌（用于GitLab API调用）
+      accessToken:
+        key: token
+        name: gitlab-access
+      # webhook密钥（使用现有的gitlab-webhook-secret）
+      secretToken:
+        key: secretToken
+        name: gitlab-webhook-secret
+      # SSL验证设置
+      enableSSLVerification: false
+      # Gitlab基础URL
+      gitlabBaseURL: http://192.168.31.195
+      deleteHookOnFinish: true
