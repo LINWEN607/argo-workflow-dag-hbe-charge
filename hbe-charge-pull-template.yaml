@@ -106,13 +106,88 @@ spec:
             fi
 
             PROJECT_NAME=$(echo {{inputs.parameters.url}} | awk -F'/' '{print $NF}' | sed 's/\..*//')
-            echo -n "$PROJECT_NAME" > /tmp/project-name
-            echo "Project name: $PROJECT_NAME"
+            
+            # 检查是否有变更文件
+            git diff --name-only HEAD~1 HEAD > /tmp/changed-files.txt || touch /tmp/changed-files.txt
+            
+            # 检查是否有变更文件
+            if [ ! -s /tmp/changed-files.txt ]; then
+              echo "Error: No changed files detected, please check your commit content."
+              exit 1
+            fi
+
+            # 用Set存储被修改的模块，防止重复
+            BACKEND=0
+            CSMS16=0
+            CSMS201=0
+            FRONTEND=0
+            JOBS=0
+
+            # 遍历所有修改的文件，确定它们属于哪些模块
+            while IFS= read -r file; do
+              echo "Processing file: $file"
+              # 使用 [ ] 替代 [[ ]] 以确保与 sh 兼容
+              # 使用双引号包裹变量以处理包含空格的文件名
+              if [ "${file#app/backend/}" != "$file" ]; then
+                echo "Matched backend module"
+                BACKEND=1
+              elif [ "${file#app/csms1.6/}" != "$file" ]; then
+                echo "Matched csms1.6 module"
+                CSMS16=1
+              elif [ "${file#app/csms2.0.1/}" != "$file" ]; then
+                echo "Matched csms2.0.1 module"
+                CSMS201=1
+              elif [ "${file#app/frontend/}" != "$file" ]; then
+                echo "Matched frontend module"
+                FRONTEND=1
+              elif [ "${file#app/jobs/}" != "$file" ]; then
+                echo "Matched jobs module"
+                JOBS=1
+              else
+                echo "File $file did not match any module pattern"
+              fi
+            done < /tmp/changed-files.txt
+
+            echo "Module flags - BACKEND:$BACKEND CSMS16:$CSMS16 CSMS201:$CSMS201 FRONTEND:$FRONTEND JOBS:$JOBS"
+
+            # 构建模块列表
+            MODULES=""
+            if [ $BACKEND -eq 1 ]; then
+              MODULES="${MODULES}backend,"
+            fi
+            if [ $CSMS16 -eq 1 ]; then
+              MODULES="${MODULES}csms1.6,"
+            fi
+            if [ $CSMS201 -eq 1 ]; then
+              MODULES="${MODULES}csms2.0.1,"
+            fi
+            if [ $FRONTEND -eq 1 ]; then
+              MODULES="${MODULES}frontend,"
+            fi
+            if [ $JOBS -eq 1 ]; then
+              MODULES="${MODULES}jobs,"
+            fi
+
+            echo "Modules string before trim: $MODULES"
+
+            # 移除末尾的逗号
+            MODULES=${MODULES%,}
+
+            echo "Modules string after trim: $MODULES"
+
+            # 如果没有检测到模块，则抛出错误
+            if [ -z "$MODULES" ]; then
+              echo "Error: No modules detected for building, please check your commit content."
+              exit 1
+            fi
+
+            echo -n "$MODULES" > /tmp/apps-to-build
+            echo "Modules to build: $MODULES"
             
             # 确保脚本以成功状态退出
             exit 0
       outputs:
         parameters:
-          - name: project-name
+          - name: apps-to-build
             valueFrom:
-              path: /tmp/project-name
+              path: /tmp/apps-to-build

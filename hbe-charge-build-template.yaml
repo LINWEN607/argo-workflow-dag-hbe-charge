@@ -19,12 +19,13 @@ spec:
       inputs:
         parameters:
           - name: branch
+          - name: apps-to-build
       volumes:
         - name: shared-workspace
           persistentVolumeClaim:
             claimName: shared-data-pvc-2
       container:
-        image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/library/node:16-alpine3.14
+        image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/library/golang:1.23.8-alpine
         imagePullPolicy: IfNotPresent
         workingDir: /src
         volumeMounts:
@@ -33,62 +34,68 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
           - |
+            #!/bin/sh
             set -e
 
-            echo "开始 Vite 编译..."
+            APPS="{{inputs.parameters.apps-to-build}}"
+            echo "Apps to build: $APPS"
 
-            # 显示当前Node.js和npm版本
-            node --version
-            npm --version
-
-            # 配置npm镜像
-            npm config set registry https://registry.npmmirror.com
-            npm config set sass_binary_site=https://npm.taobao.org/mirrors/node-sass
-
-            # 安装cnpm全局工具
-            npm install -g cnpm --registry=https://registry.npmmirror.com
-
-            # 显式安装关键依赖以解决构建时找不到模块的问题
-            cnpm install lodash --save
-            cnpm install dayjs --save
-            cnpm install @vueuse/core --save
-
-            # 安装项目依赖（包括vite）
-            cnpm install
-
-            # 验证vite是否正确安装
-            ls -la node_modules/.bin/vite
-
-            # 显示项目根目录结构
-            ls -la
-
-            # 执行Vite构建
-            npm run build
-
-            # 使用固定的工作空间路径
-            outputDir="/src"
-
-            # 验证构建是否成功
-            if [ ! -d "${outputDir}/hbe_backend" ]; then
-                echo "构建完成但未生成hbe_backend目录，检查构建配置"
-                echo "当前工作空间路径: ${outputDir}"
-                ls -la
-                exit 1
+            if [ -z "$APPS" ]; then
+              echo "No apps to build"
+              echo -n "Build successful" > /tmp/build-output
+              exit 0
             fi
 
-            # 显示构建输出目录内容
-            ls -la "${outputDir}/"
+            # 创建Go模块缓存目录
+            mkdir -p /go-cache
 
-            # 验证构建是否成功
-            if [ ! -f "${outputDir}/hbe_backend/index.html" ]; then
-                # 检查是否有其他HTML文件
-                find ${outputDir}/hbe_backend -name "*.html" -type f
-                echo "Vite 构建失败，未生成 index.html 文件"
+            # 将apps列表写入临时文件并逐行处理，避免循环问题
+            echo "$APPS" | tr ',' '\n' > /tmp/apps.txt
+
+            # 逐行读取应用名称并构建
+            while IFS= read -r app; do
+              if [ -z "$app" ]; then
+                continue
+              fi
+              
+              echo "Building module: $app"
+              
+              if [ ! -d "app/$app" ]; then
+                echo "Error: Directory app/$app does not exist"
                 exit 1
-            fi
+              fi
+              
+              cd app/$app
+              
+              if [ ! -f "main.go" ]; then
+                echo "Error: main.go not found in app/$app"
+                exit 1
+              fi
+              
+              echo "Running go build..."
+              go build -o main main.go
+              
+              if [ ! -f "main" ]; then
+                echo "Error: Failed to build main executable"
+                exit 1
+              fi
+              
+              mkdir -p /var/jenkins_home/$app
+              cp main /var/jenkins_home/$app/
+              
+              # 计算程序文件的哈希值和文件大小（与 Jenkinsfile 功能保持一致）
+              echo "计算哈希值..."
+              sha256sum main > /var/jenkins_home/$app/main.sha256
+              # 使用 Alpine Linux 兼容的方式获取文件大小
+              wc -c < main > /var/jenkins_home/$app/main.size
+              
+              echo "Successfully built and processed $app"
+              cd ../..
+            done < /tmp/apps.txt
 
-            echo "Vite编译成功完成"
+            rm -f /tmp/apps.txt
             echo -n "Build successful" > /tmp/build-output
+            echo "All modules built successfully"
       outputs:
         parameters:
           - name: build-output
