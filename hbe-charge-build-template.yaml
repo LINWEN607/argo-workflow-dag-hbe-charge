@@ -31,6 +31,11 @@ spec:
         volumeMounts:
           - name: shared-workspace
             mountPath: /src
+        env:
+          - name: GOPROXY
+            value: "https://goproxy.cn,direct"
+          - name: GOMODCACHE
+            value: /go-cache
         command: ["/bin/sh", "-c"]
         args:
           - |

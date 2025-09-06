@@ -1,6 +1,6 @@
 # Argo Workflow CI/CD 项目说明
 
-本项目基于 Argo Workflows 实现一套完整的 CI/CD 流水线，用于自动化构建和部署 snciot-backend2-0 应用。项目使用 GitLab Webhook 触发流水线，包含代码拉取、构建、部署和通知等完整流程。
+本项目基于 Argo Workflows 实现一套完整的 CI/CD 流水线，用于自动化构建和部署 hbe-charge 应用。项目使用 GitLab Webhook 触发流水线，包含代码拉取、构建、部署和通知等完整流程。
 
 ## 项目结构
 
@@ -8,11 +8,11 @@
 .
 ├── event-source-webhook.yaml           # Webhook 事件源配置
 ├── event-sensor-webhook.yaml           # 事件传感器配置
-├── snciot-backend2-0-pipeline.yaml     # 主工作流模板
-├── snciot-backend2-0-pull-template.yaml     # 代码拉取模板
-├── snciot-backend2-0-build-template.yaml    # 构建模板
-├── snciot-backend2-0-deploy-template.yaml   # 部署模板
-├── snciot-backend2-0-dingtalk-notify-template.yaml  # 钉钉通知模板
+├── hbe-charge-pipeline.yaml            # 主工作流模板
+├── hbe-charge-pull-template.yaml       # 代码拉取模板
+├── hbe-charge-build-template.yaml      # 构建模板
+├── hbe-charge-deploy-template.yaml     # 部署模板
+├── hbe-charge-dingtalk-notify-template.yaml  # 钉钉通知模板
 ├── dingtalk-webhook-secret.yaml        # 钉钉 Webhook 密钥
 ├── deployment-ssh-keys.yaml            # 部署 SSH 密钥
 ├── gitlab-pull-secret.yaml             # GitLab 拉取代碼密钥
@@ -49,11 +49,11 @@ GitLab Push Event
     → Webhook (event-source-webhook.yaml) 
     → EventBus (eventbus.yaml) 
     → Event Sensor (event-sensor-webhook.yaml) 
-    → Workflow (snciot-backend2-0-pipeline.yaml)
-        ├── Pull Template (snciot-backend2-0-pull-template.yaml)
-        ├── Build Template (snciot-backend2-0-build-template.yaml)
-        ├── Deploy Template (snciot-backend2-0-deploy-template.yaml)
-        └── Notify Template (snciot-backend2-0-dingtalk-notify-template.yaml)
+    → Workflow (hbe-charge-pipeline.yaml)
+        ├── Pull Template (hbe-charge-pull-template.yaml)
+        ├── Build Template (hbe-charge-build-template.yaml)
+        ├── Deploy Template (hbe-charge-deploy-template.yaml)
+        └── Notify Template (hbe-charge-dingtalk-notify-template.yaml)
 ```
 
 ### 关键数据字段传递
@@ -71,10 +71,10 @@ GitLab Push Event
 文件: `event-source-webhook.yaml`
 
 定义了 GitLab Webhook 事件源，监听以下端点：
-- `/snciot_backend2-0`: 用于触发 snciot-backend2-0 项目的 CI/CD 流水线
+- `/hbe-charge`: 用于触发 hbe-charge 项目的 CI/CD 流水线
 
 配置详情：
-- 监听 GitLab 项目: `lins/snciot_backend2-0`
+- 监听 GitLab 项目: `lins/hbe-charge`
 - 监听事件类型: PushEvents（推送事件）
 - GitLab 基础 URL: `http://192.168.31.195`
 - Webhook 回调 URL: `http://192.168.30.149:30080`
@@ -85,7 +85,7 @@ GitLab Push Event
 监听来自 Event Source 的事件，并触发相应的工作流。主要功能包括：
 - 接收 GitLab Webhook 事件
 - 解析事件数据并提取关键参数
-- 触发 snciot-backend2-0 CI/CD 流水线
+- 触发 hbe-charge CI/CD 流水线
 - 提取的参数包括：
   - branch: 分支名 (来自 body.ref)
   - git-repo-url: Git 仓库地址 (来自 body.project.git_http_url)
@@ -115,33 +115,35 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
 ### 4. Workflow Templates (工作流模板)
 
 #### 主工作流模板
-文件: `snciot-backend2-0-pipeline.yaml`
+文件: `hbe-charge-pipeline.yaml`
 
 定义了完整的 CI/CD 流水线，包含以下步骤：
-1. 代码拉取 (snciot-backend2-0-pull)
-2. 代码构建 (snciot-backend2-0-build)
-3. 应用部署 (snciot-backend2-0-deploy)
-4. 钉钉通知 (snciot-backend2-0-dingtalk-notify)
+1. 代码拉取 (hbe-charge-pull)
+2. 代码构建 (hbe-charge-build)
+3. 应用部署 (hbe-charge-deploy)
+4. 钉钉通知 (hbe-charge-dingtalk-notify)
 
 #### 代码拉取模板
-文件: `snciot-backend2-0-pull-template.yaml`
+文件: `hbe-charge-pull-template.yaml`
 
 负责从 GitLab 拉取代码，主要功能：
 - 使用 GitLab 凭据进行身份验证
 - 克隆指定分支的代码
+- 检测变更文件并确定需要构建的服务模块
 - 将代码存储在共享 PVC 中供后续步骤使用
+- 输出需要构建的服务列表参数
 
 #### 代码构建模板
-文件: `snciot-backend2-0-build-template.yaml`
+文件: `hbe-charge-build-template.yaml`
 
-负责构建前端应用，主要功能：
-- 使用 Node.js 环境
-- 安装项目依赖
-- 执行 Vite 构建
-- 生成构建产物
+负责构建 Go 应用，主要功能：
+- 使用 Go 1.23.8 环境
+- 并行构建多个服务模块
+- 每个构建任务处理一个特定的服务
+- 构建产物保存在共享 PVC 中供部署步骤使用
 
 #### 应用部署模板
-文件: `snciot-backend2-0-deploy-template.yaml`
+文件: `hbe-charge-deploy-template.yaml`
 
 负责将构建产物部署到目标服务器，支持多环境部署：
 - Dev 环境: 192.168.30.111
@@ -149,21 +151,21 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
 - Release 环境: 20.77.170.190
 
 部署流程：
-1. 压缩构建产物
-2. 通过 SSH 传输到目标服务器
+1. 通过 SSH 连接到目标服务器
+2. 停止服务
 3. 备份旧版本
-4. 解压新版本
-5. 清理旧备份（保留最近4个版本）
+4. 传输新版本可执行文件
+5. 启动服务
 6. 生成部署元数据
 
 在部署过程中，系统会使用 `BUILD_TIME_FORMATTED` 变量，该变量取自 GitLab webhook payload 中的 `commits[0].timestamp` 字段，并在部署脚本中格式化为更易读的形式。
 
 #### 钉钉通知模板
-文件: `snciot-backend2-0-dingtalk-notify-template.yaml`
+文件: `hbe-charge-dingtalk-notify-template.yaml`
 
 负责发送构建结果通知到钉钉群，主要功能：
 - 根据构建状态发送成功或失败通知
-- 包含详细的构建信息
+- 包含详细的构建信息和服务列表
 - 支持@指定用户
 
 ## 配置说明
@@ -236,24 +238,24 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
 
 8. 部署 Workflow Templates:
    ```bash
-   kubectl apply -f snciot-backend2-0-pull-template.yaml -n argo-cicd
-   kubectl apply -f snciot-backend2-0-build-template.yaml -n argo-cicd
-   kubectl apply -f snciot-backend2-0-deploy-template.yaml -n argo-cicd
-   kubectl apply -f snciot-backend2-0-dingtalk-notify-template.yaml -n argo-cicd
-   kubectl apply -f snciot-backend2-0-pipeline.yaml -n argo-cicd
+   kubectl apply -f hbe-charge-pull-template.yaml -n argo-cicd
+   kubectl apply -f hbe-charge-build-template.yaml -n argo-cicd
+   kubectl apply -f hbe-charge-deploy-template.yaml -n argo-cicd
+   kubectl apply -f hbe-charge-dingtalk-notify-template.yaml -n argo-cicd
+   kubectl apply -f hbe-charge-pipeline.yaml -n argo-cicd
    ```
 
 ## 使用说明
 
 部署完成后，可以通过以下 URL 触发 CI/CD 流水线：
 
-- 触发 snciot-backend2-0 项目: `http://<node-ip>:30080/snciot_backend2-0`
+- 触发 hbe-charge 项目: `http://<node-ip>:30080/hbe-charge`
 
 ### GitLab Webhook 配置
 
 在 GitLab 中配置 Webhook 时，请确保以下配置正确：
 
-1. URL: `http://192.168.30.149:30080/snciot_backend2-0`
+1. URL: `http://192.168.30.149:30080/hbe-charge`
 2. Secret Token: `cicd` (与 gitlab-webhook-secret.yaml 中配置的值一致)
 3. Trigger: 选择 "Push events"
 
@@ -261,9 +263,9 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
 
 | 分支名 | 部署环境 | 目标服务器 | 端口 |
 |--------|----------|------------|------|
-| master | Dev 环境 | 192.168.30.111 | 22 |
+| dev | Dev 环境 | 192.168.30.111 | 22 |
 | main | Main 环境 | 192.168.0.210 | 22 |
-| release | Release 环境 | 20.77.170.190 | 1022 |
+| release | Release 环境 | 20.77.170.190 | 22 |
 
 ## 故障排除
 
@@ -282,7 +284,7 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
 3. **构建失败**
    - 查看构建日志了解具体错误
    - 检查项目依赖是否正确安装
-   - 确认 Node.js 版本兼容性
+   - 确认 Go 版本兼容性
 
 4. **部署失败**
    - 检查目标服务器 SSH 连接
@@ -296,7 +298,7 @@ EventBus 使用 NATS 作为消息传输后端，配置说明：
 kubectl logs -n argo-cicd -l eventsource-name=gitlab-eventsource
 
 # 查看 Sensor 日志
-kubectl logs -n argo-cicd -l sensor-name=sample-eventsensor
+kubectl logs -n argo-cicd -l sensor-name=hbe-charge-eventsensor
 
 # 查看工作流日志
 argo logs <workflow-name> -n argo-cicd
