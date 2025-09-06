@@ -24,6 +24,7 @@ spec:
           - name: commit-message
           - name: build-time
           - name: git-url
+          - name: app-name
       volumes:
         - name: shared-workspace
           persistentVolumeClaim:
@@ -50,6 +51,7 @@ spec:
           - |
             set -e
 
+            APP_NAME="{{inputs.parameters.app-name}}"
             TARGET_BRANCH="{{inputs.parameters.target-branch}}"
             PROJECT_NAME="{{inputs.parameters.project-name}}"
             GIT_COMMIT="{{inputs.parameters.git-commit}}"
@@ -69,6 +71,7 @@ spec:
                 ;;
             esac
 
+            echo "Debug: APP_NAME=$APP_NAME"
             echo "Debug: TARGET_BRANCH=$TARGET_BRANCH"
             echo "Debug: BRANCH_NAME=$BRANCH_NAME"
             echo "Debug: PROJECT_NAME=$PROJECT_NAME"
@@ -78,22 +81,22 @@ spec:
 
             # Set deployment configuration based on branch
             case "$BRANCH_NAME" in
-              "master")
+              "dev")
                 HOST="192.168.30.111"
-                REMOTE_BASE_PATH="/usr/local/www/web/"
+                REMOTE_BASE_PATH="/usr/local/www/go/$PROJECT_NAME"
                 PORT="22"
                 KEY_FILE="dev-ssh-key"
                 ;;
               "main")
                 HOST="192.168.0.210"
-                REMOTE_BASE_PATH="/usr/local/www/web/"
+                REMOTE_BASE_PATH="/usr/local/www/go/src/$PROJECT_NAME"
                 PORT="22"
                 KEY_FILE="main-ssh-key"
                 ;;
               "release")
                 HOST="20.77.170.190"
-                REMOTE_BASE_PATH="/usr/local/www/web/"
-                PORT="1022"
+                REMOTE_BASE_PATH="/usr/local/www/go/src/$PROJECT_NAME"
+                PORT="22"
                 KEY_FILE="release-ssh-key"
                 ;;
               *)
@@ -124,108 +127,114 @@ spec:
             cp "/credentials/$FINAL_KEY_FILE" /tmp/temp_key
             chmod 600 /tmp/temp_key
 
-            # Check if hbe_backend folder exists
-            if [ ! -d "hbe_backend" ]; then
-              echo "Error: hbe_backend folder does not exist"
-              ls -la
-              exit 1
+            # Check if app name is provided
+            if [ -z "$APP_NAME" ]; then
+              echo "No app to deploy"
+              exit 0
             fi
 
-            echo "Deploying hbe_backend to $HOST:$REMOTE_BASE_PATH"
+            # Process the app
+            echo "Debug: Processing app: $APP_NAME"
 
-            # Get file size and hash for meta log
-            FILE_SIZE=$(du -sh hbe_backend | cut -f1)
-            FILE_HASH=$(find hbe_backend -type f -exec sha256sum {} \; | sha256sum | cut -d' ' -f1)
+            # Construct full remote path with app name
+            REMOTE_PATH="$REMOTE_BASE_PATH/app/$APP_NAME"
+            BACKUP_PATH="/data/backup"
 
-            # Compress local build artifacts and transfer to remote server
-            echo "Compressing hbe_backend folder..."
-            tar -czf hbe_backend.tar.gz hbe_backend
+            echo "Deploying app $APP_NAME to $HOST:$REMOTE_PATH"
 
-            # Transfer compressed package to remote server
-            echo "Transferring compressed package to remote server..."
-            scp -i /tmp/temp_key -P $PORT -o StrictHostKeyChecking=no hbe_backend.tar.gz root@$HOST:$REMOTE_BASE_PATH
-
-            # Execute all operations on remote server: backup, extract, rename, cleanup
-            echo "Executing remote deployment operations..."
+            # 1. Stop service
+            echo "Stopping service for app $APP_NAME..."
             ssh -o StrictHostKeyChecking=no -i /tmp/temp_key root@$HOST -p $PORT "
-              DEPLOY_PATH=\"$REMOTE_BASE_PATH\"
-              FOLDER_PATH=\"\$DEPLOY_PATH/hbe_backend\"
-              
-              # Backup old version folder
-              echo \"Backing up old version folder...\"
-              if [ -d \"\$FOLDER_PATH\" ]; then
+              echo \"Stopping service hbecharge_$APP_NAME...\"
+              systemctl stop hbecharge_$APP_NAME || echo \"Service stop failed or service not running\"
+            "
+
+            # 2. Backup existing files
+            echo "Backing up existing files for app $APP_NAME..."
+            ssh -o StrictHostKeyChecking=no -i /tmp/temp_key root@$HOST -p $PORT "
+              BASE_NAME=\"hbe-charge\"
+              DEPLOY_PATH=\"$REMOTE_PATH\"
+              FILE_PATH=\"\$DEPLOY_PATH/main\"
+              echo \"Backing up files...\"
+              if [ -f \"\$FILE_PATH\" ]; then
+                mkdir -p $BACKUP_PATH/hbe-charge/$APP_NAME
                 TIMESTAMP=\$(date +%Y%m%d%H%M%S)
-                BACKUP_FOLDER=\"\$DEPLOY_PATH/hbe_backend_\$TIMESTAMP\"
-                mv \"\$FOLDER_PATH\" \"\$BACKUP_FOLDER\"
-                echo \"Backed up old folder to: \$BACKUP_FOLDER\"
+                BACKUP_FILE=\"$BACKUP_PATH/hbe-charge/$APP_NAME/\$BASE_NAME-\$TIMESTAMP\"
+                cp \"\$FILE_PATH\" \"\$BACKUP_FILE\"
+                echo \"Backed up file to: \$BACKUP_FILE\"
+                ls -t $BACKUP_PATH/hbe-charge/$APP_NAME/\$BASE_NAME-* 2>/dev/null | tail -n +4 | xargs -r rm -f
+                echo \"Cleaned up old backup files\"
               else
-                echo \"No old version folder found\"
-              fi
-              
-              # Extract new version
-              cd $REMOTE_BASE_PATH
-              tar -xzf hbe_backend.tar.gz
-              rm -f hbe_backend.tar.gz
-              echo \"Deployment completed\"
-              
-              # Check if backup folder count exceeds 4, delete the oldest if so
-              BACKUP_COUNT=\$(ls -d \$DEPLOY_PATH/hbe_backend_* 2>/dev/null | wc -l)
-              if [ \$BACKUP_COUNT -gt 4 ]; then
-                OLDEST_FOLDER=\$(ls -td \$DEPLOY_PATH/hbe_backend_* | tail -1)
-                rm -rf \"\$OLDEST_FOLDER\"
-                echo \"Deleted oldest backup folder: \$OLDEST_FOLDER\"
+                echo \"No existing file found to backup\"
               fi
             "
 
-            # Create or update meta file
-            echo "Creating meta log file..."
-            BUILD_TIME_FORMATTED=$(echo "$BUILD_TIME" | sed 's/T/ /g' | sed 's/+/_/g')
-            VERSION_NUMBER="${PROJECT_NAME}_${BRANCH_NAME}_${BUILD_TIME_FORMATTED}"
-            ESCAPED_COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | sed 's/"/\\"/g')
+            # 3. Transfer new files - ONLY transfer the main executable file
+            echo "Transferring main executable file for app $APP_NAME..."
+            if [ -f "app/$APP_NAME/main" ]; then
+              echo "Local main executable file exists:"
+              ls -la "app/$APP_NAME/main"
+              
+              # Get file size and hash before transfer
+              FILE_SIZE=$(stat -c%s "app/$APP_NAME/main")
+              FILE_HASH=$(sha256sum "app/$APP_NAME/main" | cut -d" " -f1)
+              echo "File size: $FILE_SIZE bytes"
+              echo "File hash: $FILE_HASH"
+              
+              scp -i /tmp/temp_key -P $PORT -o StrictHostKeyChecking=no "app/$APP_NAME/main" root@$HOST:$REMOTE_PATH/
+              echo "Main executable file transfer completed"
+            else
+              echo "Error: Main executable file app/$APP_NAME/main does not exist"
+              exit 1
+            fi
 
+            # 4. Start service
+            echo "Starting service for app $APP_NAME..."
+            ssh -o StrictHostKeyChecking=no -i /tmp/temp_key root@$HOST -p $PORT "
+              echo \"Starting service hbecharge_$APP_NAME...\"
+              systemctl start hbecharge_$APP_NAME
+            "
+
+            # 5. Create or update meta file
+            echo "Updating meta file for app $APP_NAME..."
+            # 正确处理BUILD_TIME中的特殊字符，避免过度转义
+            BUILD_TIME_FORMATTED=$(echo "$BUILD_TIME" | sed 's/T/ /g' | sed 's/+/_/g')
+            
+            # 处理commit message中的特殊字符
+            ESCAPED_COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | sed 's/"/\\"/g')
+            
             # Create meta content
             echo "# 构建元数据信息" > /tmp/meta_content.txt
-            echo "软件版本号: $VERSION_NUMBER" >> /tmp/meta_content.txt
+            echo "软件版本号: $APP_NAME\_$BUILD_TIME_FORMATTED" >> /tmp/meta_content.txt
             echo "发布日期和时间: $BUILD_TIME_FORMATTED" >> /tmp/meta_content.txt
             echo "归属的项目: $PROJECT_NAME" >> /tmp/meta_content.txt
             echo "代码仓库: $GIT_URL" >> /tmp/meta_content.txt
             echo "分支: $BRANCH_NAME" >> /tmp/meta_content.txt
             echo "对应 revision: $GIT_COMMIT" >> /tmp/meta_content.txt
-            echo "压缩包大小: $FILE_SIZE" >> /tmp/meta_content.txt
-            echo "压缩包 hash(sha256): $FILE_HASH" >> /tmp/meta_content.txt
+            echo "二进制文件大小: $FILE_SIZE bytes" >> /tmp/meta_content.txt
+            echo "二进制文件 hash(sha256): $FILE_HASH" >> /tmp/meta_content.txt
             echo "主要修改描述: $ESCAPED_COMMIT_MESSAGE" >> /tmp/meta_content.txt
             echo "" >> /tmp/meta_content.txt
             echo "构建时间: $BUILD_TIME_FORMATTED" >> /tmp/meta_content.txt
             echo "构建状态: SUCCESS" >> /tmp/meta_content.txt
-
-            # Transfer metadata file to remote server (append to existing meta.log)
-            echo "Appending meta log to remote server meta.log..."
-            scp -i /tmp/temp_key -P $PORT -o StrictHostKeyChecking=no /tmp/meta_content.txt root@$HOST:/tmp/meta_content.txt
-            ssh -o StrictHostKeyChecking=no -i /tmp/temp_key root@$HOST -p $PORT "
-              if [ ! -f $REMOTE_BASE_PATH/meta.log ]; then
-                touch $REMOTE_BASE_PATH/meta.log
-              fi
-              echo '' >> $REMOTE_BASE_PATH/meta.log
-              echo '========== New Deployment ==========' >> $REMOTE_BASE_PATH/meta.log
-              cat /tmp/meta_content.txt >> $REMOTE_BASE_PATH/meta.log
-              echo '========== End of Deployment ==========' >> $REMOTE_BASE_PATH/meta.log
-              rm -f /tmp/meta_content.txt
-            "
-
+            
+            # Transfer metadata file to remote server
+            scp -i /tmp/temp_key -P $PORT -o StrictHostKeyChecking=no /tmp/meta_content.txt root@$HOST:$REMOTE_PATH/meta.log
+            
             # Verify the meta file was transferred
             echo "Verifying meta file on remote server:"
             ssh -o StrictHostKeyChecking=no -i /tmp/temp_key root@$HOST -p $PORT "
-              if [ -f $REMOTE_BASE_PATH/meta.log ]; then
+              if [ -f $REMOTE_PATH/meta.log ]; then
                 echo 'Meta file exists on remote server:'
-                tail -n 20 $REMOTE_BASE_PATH/meta.log
+                tail -n 20 $REMOTE_PATH/meta.log
               else
                 echo 'Error: Meta file was not found on remote server'
               fi
             "
+            
+            echo "Successfully deployed app $APP_NAME"
 
             # Clean up temporary files
-            rm -f /tmp/temp_key /tmp/meta_content.txt hbe_backend.tar.gz
+            rm -f /tmp/temp_key /tmp/meta_content.txt
 
-            echo "Frontend application deployed successfully"
-
-            echo "All apps deployed successfully"
+            echo "App deployed successfully"

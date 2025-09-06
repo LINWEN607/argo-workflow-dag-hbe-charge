@@ -19,7 +19,7 @@ spec:
       inputs:
         parameters:
           - name: branch
-          - name: apps-to-build
+          - name: app-name
       volumes:
         - name: shared-workspace
           persistentVolumeClaim:
@@ -37,11 +37,11 @@ spec:
             #!/bin/sh
             set -e
 
-            APPS="{{inputs.parameters.apps-to-build}}"
-            echo "Apps to build: $APPS"
+            APP="{{inputs.parameters.app-name}}"
+            echo "App to build: $APP"
 
-            if [ -z "$APPS" ]; then
-              echo "No apps to build"
+            if [ -z "$APP" ]; then
+              echo "No app to build"
               echo -n "Build successful" > /tmp/build-output
               exit 0
             fi
@@ -49,53 +49,41 @@ spec:
             # 创建Go模块缓存目录
             mkdir -p /go-cache
 
-            # 将apps列表写入临时文件并逐行处理，避免循环问题
-            echo "$APPS" | tr ',' '\n' > /tmp/apps.txt
-
-            # 逐行读取应用名称并构建
-            while IFS= read -r app; do
-              if [ -z "$app" ]; then
-                continue
-              fi
-              
-              echo "Building module: $app"
-              
-              if [ ! -d "app/$app" ]; then
-                echo "Error: Directory app/$app does not exist"
-                exit 1
-              fi
-              
-              cd app/$app
-              
-              if [ ! -f "main.go" ]; then
-                echo "Error: main.go not found in app/$app"
-                exit 1
-              fi
-              
-              echo "Running go build..."
-              go build -o main main.go
-              
-              if [ ! -f "main" ]; then
-                echo "Error: Failed to build main executable"
-                exit 1
-              fi
-              
-              mkdir -p /var/jenkins_home/$app
-              cp main /var/jenkins_home/$app/
-              
-              # 计算程序文件的哈希值和文件大小（与 Jenkinsfile 功能保持一致）
-              echo "计算哈希值..."
-              sha256sum main > /var/jenkins_home/$app/main.sha256
-              # 使用 Alpine Linux 兼容的方式获取文件大小
-              wc -c < main > /var/jenkins_home/$app/main.size
-              
-              echo "Successfully built and processed $app"
-              cd ../..
-            done < /tmp/apps.txt
-
-            rm -f /tmp/apps.txt
+            echo "Building module: $APP"
+            
+            if [ ! -d "app/$APP" ]; then
+              echo "Error: Directory app/$APP does not exist"
+              exit 1
+            fi
+            
+            cd app/$APP
+            
+            if [ ! -f "main.go" ]; then
+              echo "Error: main.go not found in app/$APP"
+              exit 1
+            fi
+            
+            echo "Running go build..."
+            go build -o main main.go
+            
+            if [ ! -f "main" ]; then
+              echo "Error: Failed to build main executable"
+              exit 1
+            fi
+            
+            mkdir -p /var/jenkins_home/$APP
+            cp main /var/jenkins_home/$APP/
+            
+            # 计算程序文件的哈希值和文件大小（与 Jenkinsfile 功能保持一致）
+            echo "计算哈希值..."
+            sha256sum main > /var/jenkins_home/$APP/main.sha256
+            # 使用 Alpine Linux 兼容的方式获取文件大小
+            wc -c < main > /var/jenkins_home/$APP/main.size
+            
+            echo "Successfully built and processed $APP"
+            
             echo -n "Build successful" > /tmp/build-output
-            echo "All modules built successfully"
+            echo "Module built successfully"
       outputs:
         parameters:
           - name: build-output
