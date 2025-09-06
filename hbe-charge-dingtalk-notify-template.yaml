@@ -21,6 +21,7 @@ spec:
           - name: workflow-status
           - name: workflow-duration
           - name: workflow-start-time
+          - name: apps-to-build
       container:
         image: docker.io/library/dingtalk-notify:latest
         imagePullPolicy: IfNotPresent
@@ -55,6 +56,8 @@ spec:
             value: "{{inputs.parameters.workflow-duration}}"
           - name: WORKFLOW_START_TIME
             value: "{{inputs.parameters.workflow-start-time}}"
+          - name: APPS_TO_BUILD
+            value: "{{inputs.parameters.apps-to-build}}"
           - name: TZ
             value: "Asia/Shanghai"
         command: ["/bin/sh", "-c"]
@@ -81,7 +84,7 @@ spec:
             echo "Debug: All parameters extracted successfully"
             echo "PROJECT_NAME: $PROJECT_NAME"
             echo "WORKFLOW_NAME: $WORKFLOW_NAME"
-            echo "APPS_TO_BUILD: 前端Vite项目"
+            echo "APPS_TO_BUILD: $APPS_TO_BUILD"
             echo "COMMIT_ID: $COMMIT_ID"
             echo "COMMIT_MESSAGE: $COMMIT_MESSAGE"
             echo "COMMIT_AUTHOR: $COMMIT_AUTHOR"
@@ -170,7 +173,7 @@ spec:
             fi
 
             # 构建消息内容
-            MESSAGE="### $STATUS_TEXT\n\n- **项目名称**：$PROJECT_NAME\n- **任务名称**：$WORKFLOW_NAME\n- **构建服务**：前端Vite项目\n- **任务状态**：$STATUS_TEXT\n- **任务持续时间**：$FORMATTED_DURATION\n- **Commit ID**：$COMMIT_ID\n- **Commit 信息**：$COMMIT_MESSAGE\n- **修改人**：$COMMIT_AUTHOR\n\n> 构建时间：$TIMESTAMP\n> 构建人：$BUILD_USER\n\n**操作建议**："
+            MESSAGE="### $STATUS_TEXT\n\n- **项目名称**：$PROJECT_NAME\n- **任务名称**：$WORKFLOW_NAME\n- **构建服务**：$APPS_TO_BUILD\n- **任务状态**：$STATUS_TEXT\n- **任务持续时间**：$FORMATTED_DURATION\n- **Commit ID**：$COMMIT_ID\n- **Commit 信息**：$COMMIT_MESSAGE\n- **修改人**：$COMMIT_AUTHOR\n\n> 构建时间：$TIMESTAMP\n> 构建人：$BUILD_USER\n\n**操作建议**："
 
             # 添加操作建议
             if [ "$WORKFLOW_STATUS" = "Succeeded" ]; then
