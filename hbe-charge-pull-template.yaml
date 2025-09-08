@@ -66,6 +66,10 @@ spec:
             echo "Debug: Full environment:"
             env | grep -i git || true
 
+            # Clean up the working directory to avoid conflicts with previous runs
+            echo "Cleaning up the working directory..."
+            rm -rf /src/*
+            
             # Pull code
             git init
             git config --global credential.helper store
