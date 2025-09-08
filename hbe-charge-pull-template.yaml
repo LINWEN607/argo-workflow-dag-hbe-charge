@@ -191,3 +191,4 @@ spec:
           - name: apps-to-build
             valueFrom:
               path: /tmp/apps-to-build
+            globalName: apps-to-build
