@@ -14,7 +14,7 @@ spec:
         data:
           - path: body.ref
             type: string
-            value: ["refs/heads/master", "refs/heads/50"]
+            value: ["refs/heads/dev", "refs/heads/50"]
   triggers:
     - template:
         name: hbe-charge-trigger
