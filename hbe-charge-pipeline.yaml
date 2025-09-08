@@ -79,6 +79,11 @@ spec:
                 - name: app-name
                   value: "{{item}}"
             withParam: "{{steps.hbe-charge-pull.outputs.parameters.apps-to-build}}"
+      outputs:
+        parameters:
+          - name: apps-to-build
+            valueFrom:
+              parameter: "{{steps.hbe-charge-pull.outputs.parameters.apps-to-build}}"
     - name: hbe-charge-dingtalk-notify
       steps:
         - - name: run-dingtalk-notify
@@ -108,5 +113,5 @@ spec:
                 - name: workflow-start-time
                   value: "{{workflow.creationTimestamp}}"
                 - name: apps-to-build
-                  value: "{{steps.hbe-charge-pull.outputs.parameters.apps-to-build}}"
+                  value: "{{workflow.outputs.parameters.apps-to-build}}"
   onExit: hbe-charge-dingtalk-notify
