@@ -38,7 +38,7 @@ spec:
     parameters:
       - name: apps-to-build
         valueFrom:
-          parameter: "{{templates.hbe-charge-pipeline.outputs.parameters.apps-to-build}}"
+          parameter: "{{outputs.parameters.apps-to-build}}"
   templates:
     - name: hbe-charge-pipeline
       steps:
