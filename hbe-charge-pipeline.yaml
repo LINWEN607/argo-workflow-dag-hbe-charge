@@ -25,15 +25,15 @@ spec:
       - name: build-user
         value: ""
       - name: git-url
-        value: "" 
+        value: ""
       - name: git-commit
-        value: "" 
+        value: ""
       - name: build-time
         value: ""
       - name: commit-author
         value: ""
       - name: project-name-2
-        value: "" 
+        value: ""
   templates:
     - name: hbe-charge-pipeline
       steps:
@@ -109,4 +109,7 @@ spec:
                   value: "{{workflow.creationTimestamp}}"
                 - name: apps-to-build
                   value: "{{steps.hbe-charge-pull.outputs.parameters.apps-to-build}}"
-  onExit: hbe-charge-dingtalk-notify-template
+  onExit:
+  templateRef:
+    name: hbe-charge-dingtalk-notify-template
+    template: hbe-charge-dingtalk-notify
