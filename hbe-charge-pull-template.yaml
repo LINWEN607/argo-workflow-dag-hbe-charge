@@ -50,7 +50,7 @@ spec:
             echo "Debug: Starting pull task"
             echo "Raw branch parameter: {{inputs.parameters.branch}}"
             echo "URL parameter: {{inputs.parameters.url}}"
-            
+
             # 输出完整的参数值用于调试
             echo "=== DEBUG EVENT PAYLOAD ==="
             echo "Branch parameter type: $(echo "{{inputs.parameters.branch}}" | jq -r 'type' 2>/dev/null || echo 'not json')"
@@ -66,10 +66,7 @@ spec:
             echo "Debug: Full environment:"
             env | grep -i git || true
 
-            # Clean up the working directory to avoid conflicts with previous runs
-            echo "Cleaning up the working directory..."
-            rm -rf /src/*
-            
+
             # Pull code
             git init
             git config --global credential.helper store
@@ -110,10 +107,10 @@ spec:
             fi
 
             PROJECT_NAME=$(echo {{inputs.parameters.url}} | awk -F'/' '{print $NF}' | sed 's/\..*//')
-            
+
             # 检查是否有变更文件
             git diff --name-only HEAD~1 HEAD > /tmp/changed-files.txt || touch /tmp/changed-files.txt
-            
+
             # 检查是否有变更文件
             if [ ! -s /tmp/changed-files.txt ]; then
               echo "Error: No changed files detected, please check your commit content."
@@ -187,7 +184,7 @@ spec:
 
             echo -n "$MODULES" > /tmp/apps-to-build
             echo "Modules to build: $MODULES"
-            
+
             # 确保脚本以成功状态退出
             exit 0
       outputs:
