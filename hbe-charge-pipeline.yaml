@@ -109,7 +109,4 @@ spec:
                   value: "{{workflow.creationTimestamp}}"
                 - name: apps-to-build
                   value: "{{steps.hbe-charge-pull.outputs.parameters.apps-to-build}}"
-  onExit:
-    templateRef:
-      name: hbe-charge-dingtalk-notify-template
-      template: hbe-charge-dingtalk-notify
+  onExit: hbe-charge-dingtalk-notify
