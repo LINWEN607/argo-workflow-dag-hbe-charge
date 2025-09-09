@@ -182,8 +182,11 @@ spec:
               exit 1
             fi
 
-            echo -n "$MODULES" > /tmp/apps-to-build
-            echo "Modules to build: $MODULES"
+            # 将逗号分隔的模块列表转换为JSON数组格式
+            # 使用jq工具创建JSON数组
+            MODULES_JSON=$(echo "$MODULES" | jq -R -c 'split(",")')
+            echo -n "$MODULES_JSON" > /tmp/apps-to-build
+            echo "Modules to build (JSON format): $MODULES_JSON"
 
             # 确保脚本以成功状态退出
             exit 0
