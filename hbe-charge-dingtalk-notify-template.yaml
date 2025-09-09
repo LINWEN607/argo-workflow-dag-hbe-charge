@@ -204,16 +204,12 @@ spec:
               MESSAGE="$MESSAGE\n\n@$PHONE_NUMBER"
             fi
 
-            # 转义特殊字符以确保JSON格式正确
-            ESCAPED_MESSAGE=$(printf '%s\n' "$MESSAGE" | sed 's/\\/\\\\/g; s/"/\\"/g; s/$/\\n/g; s/\t/\\t/g')
-            ESCAPED_TITLE=$(printf '%s' "$TITLE" | sed 's/\\/\\\\/g; s/"/\\"/g')
-
             # 构建JSON数据
-            JSON_DATA="{\"msgtype\": \"markdown\", \"markdown\": {\"title\": \"$ESCAPED_TITLE\", \"text\": \"$ESCAPED_MESSAGE\"}}"
+            JSON_DATA="{\"msgtype\": \"markdown\", \"markdown\": {\"title\": \"$TITLE\", \"text\": \"$MESSAGE\"}}"
 
             # 添加@功能
             if [ -n "$PHONE_NUMBER" ]; then
-              JSON_DATA="{\"msgtype\": \"markdown\", \"markdown\": {\"title\": \"$ESCAPED_TITLE\", \"text\": \"$ESCAPED_MESSAGE\"}, \"at\": {\"atMobiles\": [\"$PHONE_NUMBER\"], \"isAtAll\": false}}"
+              JSON_DATA="{\"msgtype\": \"markdown\", \"markdown\": {\"title\": \"$TITLE\", \"text\": \"$MESSAGE\"}, \"at\": {\"atMobiles\": [\"$PHONE_NUMBER\"], \"isAtAll\": false}}"
             fi
 
             echo "JSON_DATA to be sent:"
