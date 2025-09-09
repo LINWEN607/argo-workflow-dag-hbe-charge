@@ -182,20 +182,23 @@ spec:
               exit 1
             fi
 
-            # 将逗号分隔的模块列表转换为JSON数组格式（使用最兼容的方法）
-            # 使用awk将逗号分隔的字符串转换为JSON数组
-            MODULES_JSON=$(echo "$MODULES" | awk -F',' '{
-                json = "["
-                for (i = 1; i <= NF; i++) {
-                    if (i > 1) json = json ","
-                    json = json "\"" $i "\""
-                }
-                json = json "]"
-                print json
-            }')
+            # 手动构造JSON数组格式
+            MODULES_JSON="["
+            IFS=','
+            for module in $MODULES; do
+              MODULES_JSON="${MODULES_JSON}\"${module}\","
+            done
+            # 移除末尾的逗号并添加闭合括号
+            MODULES_JSON="${MODULES_JSON%,}]"
             
             echo -n "$MODULES_JSON" > /tmp/apps-to-build
             echo "Modules to build (JSON format): $MODULES_JSON"
 
             # 确保脚本以成功状态退出
             exit 0
+      outputs:
+        parameters:
+          - name: apps-to-build
+            valueFrom:
+              path: /tmp/apps-to-build
+            globalName: apps-to-build
