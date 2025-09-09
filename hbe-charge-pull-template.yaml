@@ -182,11 +182,22 @@ spec:
               exit 1
             fi
 
-            # 将逗号分隔的模块列表转换为JSON数组格式
-            # 使用jq工具创建JSON数组
-            MODULES_JSON=$(echo "$MODULES" | jq -R -c 'split(",")')
-            echo -n "$MODULES_JSON" > /tmp/apps-to-build
-            echo "Modules to build (JSON format): $MODULES_JSON"
+            # 将逗号分隔的模块列表转换为JSON数组格式（不依赖jq）
+            # 首先将逗号分隔的字符串转换为数组元素
+            IFS=',' read -ra MODULE_ARRAY <<< "$MODULES"
+            
+            # 构建JSON数组字符串
+            JSON_ARRAY="["
+            for i in "${!MODULE_ARRAY[@]}"; do
+                if [ $i -gt 0 ]; then
+                    JSON_ARRAY="${JSON_ARRAY},"
+                fi
+                JSON_ARRAY="${JSON_ARRAY}\"${MODULE_ARRAY[i]}\""
+            done
+            JSON_ARRAY="${JSON_ARRAY}]"
+            
+            echo -n "$JSON_ARRAY" > /tmp/apps-to-build
+            echo "Modules to build (JSON format): $JSON_ARRAY"
 
             # 确保脚本以成功状态退出
             exit 0
