@@ -27,7 +27,7 @@ spec:
       container:
         image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/alpine/git:v2.49.0
         imagePullPolicy: IfNotPresent
-        workingDir: /src
+        workingDir: /src/hbe-charge
         volumeMounts:
           - name: shared-workspace
             mountPath: /src

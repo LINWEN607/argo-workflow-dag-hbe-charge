@@ -35,7 +35,7 @@ spec:
       container:
         image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/linuxserver/openssh-server:version-9.7_p1-r4
         imagePullPolicy: IfNotPresent
-        workingDir: /src
+        workingDir: /src/hbe-charge
         volumeMounts:
           - name: shared-workspace
             mountPath: /src

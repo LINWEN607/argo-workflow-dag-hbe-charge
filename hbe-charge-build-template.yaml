@@ -27,7 +27,7 @@ spec:
       container:
         image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/library/golang:1.23.8-alpine
         imagePullPolicy: IfNotPresent
-        workingDir: /src
+        workingDir: /src/hbe-charge
         volumeMounts:
           - name: shared-workspace
             mountPath: /src
