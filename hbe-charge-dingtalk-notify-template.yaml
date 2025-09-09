@@ -199,7 +199,7 @@ spec:
             echo "$JSON_DATA"
 
             # 生成精确到毫秒的时间戳（使用Python生成）
-            TIMESTAMP_MS=$(python3 -c "import time; print(int(time.time()*1000))")
+            #TIMESTAMP_MS=$(python3 -c "import time; print(int(time.time()*1000))")
             echo "Timestamp: $TIMESTAMP_MS"
 
             # 生成签名（使用Python生成，确保正确性）
