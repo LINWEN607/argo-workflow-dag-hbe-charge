@@ -217,16 +217,30 @@ spec:
             echo "" >> /tmp/meta_content.txt
             echo "构建时间: $BUILD_TIME_FORMATTED" >> /tmp/meta_content.txt
             echo "构建状态: SUCCESS" >> /tmp/meta_content.txt
+            echo "========================================" >> /tmp/meta_content.txt
             
-            # Transfer metadata file to remote server
-            scp -i /tmp/temp_key -P $PORT -o StrictHostKeyChecking=no /tmp/meta_content.txt root@$HOST:$REMOTE_PATH/meta.log
-            
+            # Transfer metadata file to remote server and append to existing meta.log
+            scp -i /tmp/temp_key -P $PORT -o StrictHostKeyChecking=no /tmp/meta_content.txt root@$HOST:/tmp/meta_content.txt
+            ssh -o StrictHostKeyChecking=no -i /tmp/temp_key root@$HOST -p $PORT "
+              if [ ! -f $REMOTE_PATH/meta.log ]; then
+                touch $REMOTE_PATH/meta.log
+              fi
+              # 将新内容添加到meta.log文件开头
+              echo '' > /tmp/new_meta.log
+              echo '========== New Deployment ==========' >> /tmp/new_meta.log
+              cat /tmp/meta_content.txt >> /tmp/new_meta.log
+              echo '========== End of Deployment ==========' >> /tmp/new_meta.log
+              cat /tmp/new_meta.log $REMOTE_PATH/meta.log > /tmp/combined_meta.log
+              mv /tmp/combined_meta.log $REMOTE_PATH/meta.log
+              rm -f /tmp/meta_content.txt /tmp/new_meta.log
+            "
+
             # Verify the meta file was transferred
             echo "Verifying meta file on remote server:"
             ssh -o StrictHostKeyChecking=no -i /tmp/temp_key root@$HOST -p $PORT "
               if [ -f $REMOTE_PATH/meta.log ]; then
                 echo 'Meta file exists on remote server:'
-                tail -n 20 $REMOTE_PATH/meta.log
+                head -n 20 $REMOTE_PATH/meta.log
               else
                 echo 'Error: Meta file was not found on remote server'
               fi
