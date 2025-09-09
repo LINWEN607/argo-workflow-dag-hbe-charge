@@ -194,7 +194,7 @@ spec:
 
             # 添加操作建议
             if [ "$WORKFLOW_STATUS" = "Succeeded" ]; then
-              MESSAGE="$MESSAGE\n- 可到对应项目分支的环境测试验证功能。(/usr/local/www/web/)此路径备份此前四个版本的文件，可按时间戳区分"
+              MESSAGE="$MESSAGE\n- 可到对应项目分支的环境测试验证功能。(/data/backup/hbe-charge/服务名称)此路径备份此前三个版本的编译文件，可按时间戳区分"
             else
               MESSAGE="$MESSAGE\n- 请联系林文进行排查"
             fi
